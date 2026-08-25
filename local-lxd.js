@@ -106,6 +106,36 @@ async function ensureImagesRemote() {
 }
 
 /**
+ * Ensure an image is available locally, download if needed
+ */
+async function ensureImageAvailable(image) {
+  // Check if image already exists locally
+  try {
+    const check = execLxc(`image list --format csv 2>/dev/null`, 15000);
+    if (check && check.length > 0) {
+      const shortName = image.split('/').pop();
+      if (check.includes(shortName)) {
+        console.log(`[LocalLXD] Image ${image} already available locally`);
+        return;
+      }
+    }
+  } catch (e) {}
+
+  // Download image from remote
+  console.log(`[LocalLXD] Downloading image: ${image}...`);
+  try {
+    // Ensure remote exists first
+    await ensureImagesRemote();
+    // Copy image from remote to local storage
+    const alias = image.split('/').pop();
+    execLxc(`image copy ${image} local: --alias ${alias}`, 300000);
+    console.log(`[LocalLXD] Image ${image} downloaded as alias: ${alias}`);
+  } catch (e) {
+    console.log(`[LocalLXD] Image download via copy failed: ${e.message}. lxc init will auto-pull on create.`);
+  }
+}
+
+/**
  * Execute lxc CLI command
  */
 function execLxc(args, timeout = 120000) {
@@ -156,9 +186,14 @@ async function createContainer(config) {
   // Ensure images: remote exists
   await ensureImagesRemote();
 
-  // Build lxc init command
-  const imageAlias = image.replace('images:', '');
-  let initCmd = `init ${image} ${name}`;
+  // Build lxc init command - use the image directly with the remote prefix
+  // If no remote prefix, default to images:
+  const fullImage = image.includes(':') ? image : `images:${image}`;
+  
+  // Auto-download the image if not already available locally
+  await ensureImageAvailable(fullImage);
+  
+  let initCmd = `init ${fullImage} ${name}`;
   
   // Resource limits (use GiB for memory as LXD expects)
   initCmd += ` -c limits.cpu=${cpu_cores}`;

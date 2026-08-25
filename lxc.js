@@ -82,7 +82,7 @@ function init(database, audit) {
 // ============= CRUD Operations =============
 
 async function createContainer(data, userId, ipAddress) {
-  const { name, node_id, template_key, cpu_cores, memory, swap, disk_size,
+  const { name, node_id, template_key, custom_image, cpu_cores, memory, swap, disk_size,
     ipv4_address, ipv6_address, gateway, netmask, bridge, vlan_id,
     hostname, username, password, network_type, description,
     enable_docker, enable_kvm, enable_fuse } = data;
@@ -126,15 +126,15 @@ async function createContainer(data, userId, ipAddress) {
   if (isLocalLxd) {
     // Create using local LXD CLI
     try {
-      // Map template_key to LXD image alias
+      // Map template_key to LXD image alias (use remote:prefix format)
       const imageMap = {
-        'ubuntu_24_lxc': 'images:ubuntu/24.04',
-        'ubuntu_22_lxc': 'images:ubuntu/22.04',
-        'debian_12_lxc': 'images:debian/12',
-        'alpine_lxc': 'images:alpine/edge',
-        'centos_9_lxc': 'images:centos/9-Stream'
+        'ubuntu_24_lxc': 'images:ubuntu/24.04/amd64',
+        'ubuntu_22_lxc': 'images:ubuntu/22.04/amd64',
+        'debian_12_lxc': 'images:debian/12/amd64',
+        'alpine_lxc': 'images:alpine/3.20/amd64',
+        'centos_9_lxc': 'images:centos/9-Stream/amd64'
       };
-      const image = imageMap[template_key] || template_key || 'images:ubuntu/24.04';
+      const image = custom_image || imageMap[template_key] || template_key || 'images:ubuntu/24.04/amd64';
 
       const result = await localLxd.createContainer({
         name,
@@ -184,14 +184,15 @@ async function createContainer(data, userId, ipAddress) {
     }
   }
 
-  // Insert into database
+  // Insert into database - use custom_image as template_key if no template was selected
+  const dbTemplateKey = custom_image || template_key;
   const containerId = await new Promise((resolve, reject) => {
     db.run(
       `INSERT INTO lxc_containers (container_id, name, owner_id, node_id, template_key, os_type,
         cpu_cores, memory, swap, disk_size, ipv4_address, ipv6_address, gateway, netmask, bridge, vlan_id,
         hostname, username, password, network_type, description, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [vmid, name, userId, node_id, template_key, template_key,
+      [vmid, name, userId, node_id, dbTemplateKey, dbTemplateKey,
         validatedCpu, validatedMemory, validatedSwap, disk_size || '20G',
         ipv4_address || null, ipv6_address || null, gateway || null,
         netmask || '24', bridge || (isLocalLxd ? 'lxdbr0' : 'vmbr0'), vlan_id || null,

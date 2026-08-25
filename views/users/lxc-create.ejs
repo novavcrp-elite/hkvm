@@ -119,7 +119,16 @@
             <div class="template-grid" id="templateGrid">
               <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading templates...</div>
             </div>
+            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+              <label class="form-label">Or Type Custom Image Name</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="form-control" id="customImageInput" placeholder="e.g., images:ubuntu/24.04/amd64 or ubuntu:24.04">
+                <button type="button" class="btn btn-ghost" onclick="useCustomImage()" style="white-space:nowrap; padding: 10px 16px;">Use This</button>
+              </div>
+              <div class="form-hint">Enter a full LXD image alias (e.g., images:debian/12/amd64, ubuntu:24.04, alpine:3.20)</div>
+            </div>
             <input type="hidden" name="template_key" id="selectedTemplate" required>
+            <input type="hidden" name="custom_image" id="customImage" value="">
           </div>
 
           <!-- Resources -->
@@ -349,13 +358,25 @@ async function loadData() {
     // Render templates
     const tg = document.getElementById('templateGrid');
     if (Array.isArray(templates) && templates.length > 0) {
-      tg.innerHTML = templates.map(t => `
-        <div class="template-card" onclick="selectTemplate('${t.template_key}')">
-          <div class="icon">${t.icon || '📦'}</div>
-          <div class="name">${t.template_name}</div>
-          <div class="desc">${t.memory ? Math.round(t.memory/1024) + 'GB' : ''} ${t.disk_size || ''}</div>
-        </div>
-      `).join('');
+      const imgMap = {
+        'ubuntu_24_lxc': 'images:ubuntu/24.04/amd64',
+        'ubuntu_22_lxc': 'images:ubuntu/22.04/amd64',
+        'debian_12_lxc': 'images:debian/12/amd64',
+        'alpine_lxc': 'images:alpine/3.20/amd64',
+        'centos_9_lxc': 'images:centos/9-Stream/amd64'
+      };
+      tg.innerHTML = templates.map(t => {
+        const iconUrl = (t.icon && t.icon.startsWith('http')) ? t.icon : null;
+        const imgName = imgMap[t.template_key] || t.template_key;
+        return `
+          <div class="template-card" onclick="selectTemplate('${t.template_key}')">
+            <div class="icon">${iconUrl ? '<img src="'+iconUrl+'" alt="OS" style="width:32px;height:32px;object-fit:contain;border-radius:6px;" onerror="this.outerHTML=\'📦\'">' : (t.icon || '📦')}</div>
+            <div class="name">${t.template_name}</div>
+            <div class="desc">${t.memory ? Math.round(t.memory/1024) + 'GB' : ''} ${t.disk_size || ''}</div>
+            <div class="desc" style="font-family:monospace;font-size:9px;margin-top:3px;opacity:0.6;">${imgName}</div>
+          </div>
+        `;
+      }).join('');
     } else {
       tg.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--text-muted);">No templates available</div>';
     }
@@ -385,10 +406,20 @@ async function loadData() {
   }
 }
 
+function useCustomImage() {
+  const val = document.getElementById('customImageInput').value.trim();
+  if (!val) { showToast('Enter an image name first', 'error'); return; }
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('customImage').value = val;
+  document.getElementById('selectedTemplate').value = '__custom__';
+  selectedTemplateKey = '__custom__';
+  showToast('Custom image: ' + val, 'info');
+}
+
 async function createLXC(e) {
   e.preventDefault();
   if (!selectedTemplateKey) {
-    showToast('Please select an OS template', 'error');
+    showToast('Please select an OS template or type a custom image', 'error');
     return;
   }
 
@@ -400,6 +431,11 @@ async function createLXC(e) {
   const form = new FormData(e.target);
   const data = Object.fromEntries(form);
   if (data.node_id === 'auto') delete data.node_id;
+  if (data.template_key === '__custom__') {
+    const customImg = document.getElementById('customImage').value;
+    delete data.template_key;
+    data.custom_image = customImg;
+  }
   // Map feature toggles to LXD config
   data.enable_docker = data.enable_docker === '1';
   data.enable_kvm = data.enable_kvm === '1';
