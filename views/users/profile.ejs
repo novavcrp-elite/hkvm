@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Profile - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+
+  <%- include('../partials/users/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title"><i class="fas fa-user" style="color: #6366F1;"></i> My Profile</h1>
+          <p style="color: var(--text-muted); margin-top: 4px;">Manage your account settings</p>
+        </div>
+      </div>
+
+      <!-- Profile Content -->
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; max-width: 1000px;">
+
+        <!-- Left: Avatar & Overview -->
+        <div class="card">
+          <div class="card-body" style="text-align: center;">
+            <div style="font-size: 64px; margin-bottom: 12px;"><i class="fas fa-user-circle" style="color: #6366F1;"></i></div>
+            <div class="card-title" style="margin-bottom: 4px;" id="displayUsername">—</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">User Account</div>
+            
+            <div style="display: grid; gap: 12px;">
+              <div style="padding: 10px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">User ID</div>
+                <div style="font-size: 14px; font-weight: 600;" id="displayUserID">—</div>
+              </div>
+              <div style="padding: 10px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Role</div>
+                <div style="font-size: 14px; font-weight: 600;">User</div>
+              </div>
+              <div style="padding: 10px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Member Since</div>
+                <div style="font-size: 14px; font-weight: 600;" id="displayCreatedAt">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Edit Forms -->
+        <div>
+
+          <!-- Personal Information -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-info-circle" style="color: #3B82F6;"></i> Personal Information</div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="inputFullName" placeholder="Your full name">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="inputEmail" placeholder="your@email.com">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary" onclick="updateProfile()"><i class="fas fa-save" style="color: #10B981;"></i> Save Changes</button>
+                <button class="btn btn-ghost" onclick="loadProfile()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Change Password -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-lock" style="color: #EF4444;"></i> Change Password</div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Current Password <span class="required">*</span></label>
+                <input type="password" class="form-control" id="inputCurrentPassword" placeholder="Enter current password">
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Password <span class="required">*</span></label>
+                <input type="password" class="form-control" id="inputNewPassword" placeholder="Enter new password (min. 6 characters)">
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+                  Password strength: <span id="passwordStrength">—</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm New Password <span class="required">*</span></label>
+                <input type="password" class="form-control" id="inputConfirmPassword" placeholder="Confirm new password">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary" onclick="changePassword()"><i class="fas fa-sync" style="color: #8B5CF6;"></i> Update Password</button>
+                <button class="btn btn-ghost" onclick="clearPasswordForm()">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Status -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-chart-bar" style="color: #06B6D4;"></i> Account Status</div>
+            </div>
+            <div class="card-body">
+              <div style="display: grid; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-subtle);">
+                  <span style="font-size: 13px;">Account Status</span>
+                  <span class="badge badge-running"><i class="fas fa-check-circle" style="color: #10B981;"></i> Active</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-subtle);">
+                  <span style="font-size: 13px;">Last Login</span>
+                  <span style="font-size: 12px; color: var(--text-secondary);" id="displayLastLogin">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                  <span style="font-size: 13px;">Account Created</span>
+                  <span style="font-size: 12px; color: var(--text-secondary);" id="displayAccountCreated">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+
+// Load user profile
+async function loadProfile() {
+  try {
+    const res = await fetch('/api/user/profile');
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to load profile');
+    }
+    currentUser = await res.json();
+    
+    // Display user info - handle null/undefined values
+    document.getElementById('displayUsername').textContent = currentUser.username || '—';
+    document.getElementById('displayUserID').textContent = `#${currentUser.id || '—'}`;
+    document.getElementById('displayCreatedAt').textContent = currentUser.created_at ? formatDate(currentUser.created_at) : '—';
+    document.getElementById('displayLastLogin').textContent = currentUser.last_login ? formatDateTime(currentUser.last_login) : 'Never';
+    document.getElementById('displayAccountCreated').textContent = currentUser.created_at ? formatDateTime(currentUser.created_at) : '—';
+    
+    // Populate form fields
+    document.getElementById('inputFullName').value = currentUser.full_name || '';
+    document.getElementById('inputEmail').value = currentUser.email || '';
+    
+  } catch(e) {
+    console.error('[Profile Error]', e);
+    alert('Failed to load profile: ' + e.message);
+  }
+}
+
+// Update profile (name & email)
+async function updateProfile() {
+  const fullName = document.getElementById('inputFullName').value.trim();
+  const email = document.getElementById('inputEmail').value.trim();
+  
+  if (!email) {
+    alert('Email is required');
+    return;
+  }
+  
+  if (!isValidEmail(email)) {
+    alert('Please enter a valid email address');
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/user/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: fullName,
+        email: email
+      })
+    });
+    
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert('✅ Profile updated successfully!');
+      loadProfile();
+    } else {
+      alert('Failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+// Change password
+async function changePassword() {
+  const current = document.getElementById('inputCurrentPassword').value;
+  const newPass = document.getElementById('inputNewPassword').value;
+  const confirm = document.getElementById('inputConfirmPassword').value;
+  
+  if (!current || !newPass || !confirm) {
+    alert('All password fields are required');
+    return;
+  }
+  
+  if (newPass.length < 6) {
+    alert('New password must be at least 6 characters');
+    return;
+  }
+  
+  if (newPass !== confirm) {
+    alert('New password and confirmation do not match');
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/user/password', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        current_password: current,
+        new_password: newPass
+      })
+    });
+    
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert('✅ Password changed successfully!');
+      clearPasswordForm();
+    } else {
+      alert('Failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function clearPasswordForm() {
+  document.getElementById('inputCurrentPassword').value = '';
+  document.getElementById('inputNewPassword').value = '';
+  document.getElementById('inputConfirmPassword').value = '';
+  document.getElementById('passwordStrength').textContent = '—';
+}
+
+// Password strength indicator
+document.getElementById('inputNewPassword')?.addEventListener('input', function(e) {
+  const pass = e.target.value;
+  let strength = '—';
+  
+  if (pass.length < 6) {
+    strength = '<i class="fas fa-circle" style="color: #EF4444;"></i> Weak';
+  } else if (pass.length < 10 || !/[A-Z]/.test(pass) || !/[0-9]/.test(pass)) {
+    strength = '<i class="fas fa-circle" style="color: #F59E0B;"></i> Fair';
+  } else if (pass.length >= 12 && /[A-Z]/.test(pass) && /[0-9]/.test(pass) && /[^a-zA-Z0-9]/.test(pass)) {
+    strength = '<i class="fas fa-circle" style="color: #10B981;"></i> Strong';
+  } else {
+    strength = '<i class="fas fa-circle" style="color: #F59E0B;"></i> Good';
+  }
+  
+  document.getElementById('passwordStrength').innerHTML = strength;
+});
+
+// Utility functions
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function isValidEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+// Load profile on page load
+loadProfile();
+</script>
+</body>
+</html>
+
+
