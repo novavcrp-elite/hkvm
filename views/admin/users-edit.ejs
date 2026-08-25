@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Edit User - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+
+  <%- include('../partials/admin/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+
+      <!-- Page Header with Breadcrumb -->
+      <div class="page-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <a href="/admin/users" style="color: var(--text-secondary); font-size: 13px; text-decoration: none;">
+              <i class="fas fa-arrow-left" style="color: #6366F1;"></i> Users
+            </a>
+            <span style="color: var(--text-muted);">/</span>
+            <span style="font-size: 13px; color: var(--text-muted);">Edit User</span>
+          </div>
+          <h1 class="page-title"><i class="fas fa-user-edit" style="color: #3B82F6;"></i> Edit User</h1>
+          <p style="color: var(--text-muted); margin-top: 4px;">Manage user account details and permissions</p>
+        </div>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div style="display: grid; grid-template-columns: 1fr 360px; gap: 24px; margin-top: 26px;">
+
+        <!-- LEFT SIDE: FORM -->
+        <div>
+
+          <!-- Alert Section -->
+          <div id="alertBox" style="display: none; margin-bottom: 20px;"></div>
+
+          <!-- User Information Card -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-user" style="color: #6366F1;"></i> User Information</div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" disabled placeholder="Username" style="background: rgba(255, 255, 255, 0.03);">
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Username cannot be changed</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" placeholder="user@example.com" onchange="updatePreview()">
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Email used for account recovery</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="fullName" placeholder="John Doe" onchange="updatePreview()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Account Status</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="isActive" style="width: 16px; height: 16px;" onchange="updatePreview()">
+                    <span style="font-size: 13px; color: var(--text-primary);">Active</span>
+                  </label>
+                  <span id="statusBadge" class="badge badge-running"><i class="fas fa-check-circle"></i> Active</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Deactivate to prevent login</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Card -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-lock" style="color: #EF4444;"></i> Security</div>
+            </div>
+            <div class="card-body">
+              <div style="padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 6px; margin-bottom: 16px;">
+                <div style="font-size: 12px; font-weight: 600; color: #3B82F6; margin-bottom: 4px;">
+                  <i class="fas fa-info-circle"></i> Optional: Change Password
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted);">Leave blank to keep current password</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">New Password</label>
+                <div style="position: relative;">
+                  <input type="password" class="form-control" id="password" placeholder="Leave blank to keep current" autocomplete="off" style="padding-right: 40px; onchange="updatePreview()"">
+                  <button type="button" class="btn btn-ghost" onclick="togglePasswordVisibility('password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: none; background: none;">
+                    <i class="fas fa-eye" id="passwordEyeIcon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <div style="position: relative;">
+                  <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm password" autocomplete="off" style="padding-right: 40px; onchange="updatePreview()"">
+                  <button type="button" class="btn btn-ghost" onclick="togglePasswordVisibility('confirmPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: none; background: none;">
+                    <i class="fas fa-eye" id="confirmPasswordEyeIcon"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role & Permissions Card -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-shield" style="color: #8B5CF6;"></i> Role & Permissions</div>
+            </div>
+            <div class="card-body">
+              <label class="form-label">User Role</label>
+              <div class="radio-cards" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="radio-card">
+                  <input type="radio" name="role" id="roleUser" value="user" onchange="updatePreview()">
+                  <label for="roleUser" class="radio-card-label">
+                    <div class="radio-card-icon"><i class="fas fa-user" style="color: #3B82F6; font-size: 20px;"></i></div>
+                    <div class="radio-card-title">Regular User</div>
+                    <div class="radio-card-desc">Limited access to own VMs</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
+                      • View own VMs<br>
+                      • Create VMs<br>
+                      • Manage own profile
+                    </div>
+                  </label>
+                </div>
+                <div class="radio-card">
+                  <input type="radio" name="role" id="roleAdmin" value="admin" onchange="updatePreview()">
+                  <label for="roleAdmin" class="radio-card-label">
+                    <div class="radio-card-icon"><i class="fas fa-crown" style="color: #F59E0B; font-size: 20px;"></i></div>
+                    <div class="radio-card-title">Administrator</div>
+                    <div class="radio-card-desc">Full system access</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
+                      • Manage all users<br>
+                      • System settings<br>
+                      • View all VMs & resources
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danger Zone Card -->
+          <div class="card" style="margin-bottom: 20px; border: 1px solid rgba(239, 68, 68, 0.2);">
+            <div class="card-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.1);">
+              <div class="card-title"><i class="fas fa-exclamation-triangle" style="color: #EF4444;"></i> Danger Zone</div>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 6px;">
+                <div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Delete User Account</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">This action cannot be undone. All user data will be permanently deleted.</div>
+                </div>
+                <button class="btn btn-danger" id="deleteBtn" onclick="deleteUser()">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 12px;">
+                <i class="fas fa-info-circle"></i> Note: The default admin user (ID: 1) cannot be deleted.
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div style="display: flex; gap: 10px;">
+            <a href="/admin/users" class="btn btn-ghost" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+            <button class="btn btn-primary" id="submitBtn" onclick="updateUser()" style="flex: 1;">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </div>
+
+        </div>
+
+        <!-- RIGHT SIDE: USER INFO BOX -->
+        <div style="height: fit-content; position: sticky; top: 100px;">
+          
+          <!-- User Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-info-circle" style="color: #3B82F6;"></i> User Info</div>
+            </div>
+            <div class="card-body" style="padding: 16px;">
+              
+              <!-- User Avatar -->
+              <div style="text-align: center; margin-bottom: 16px;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--gradient-primary); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; font-weight: 700;">
+                  <span id="previewAvatar">?</span>
+                </div>
+                <div style="font-size: 14px; font-weight: 600; color: var(--text-primary);" id="previewUsername">Username</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="previewRole">Regular User</div>
+              </div>
+
+              <!-- Divider -->
+              <div style="height: 1px; background: var(--border-subtle); margin: 16px 0;"></div>
+
+              <!-- Account Stats -->
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                
+                <!-- ID -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">User ID</div>
+                  <div style="font-size: 13px; color: var(--text-secondary);" id="previewId">-</div>
+                </div>
+
+                <!-- Created Date -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Created</div>
+                  <div style="font-size: 13px; color: var(--text-secondary);" id="previewCreated">-</div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Email</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); word-break: break-all;" id="previewEmail">Not set</div>
+                </div>
+
+                <!-- Full Name -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Full Name</div>
+                  <div style="font-size: 13px; color: var(--text-secondary);" id="previewFullName">Not set</div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Status</div>
+                  <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px;" id="previewStatusBadge">
+                    <span style="width: 6px; height: 6px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
+                    <span style="font-size: 12px; color: #10B981; font-weight: 500;">Active</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Divider -->
+              <div style="height: 1px; background: var(--border-subtle); margin: 16px 0;"></div>
+
+              <!-- Quick Actions -->
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-ghost btn-sm" style="width: 100%; font-size: 12px; justify-content: center;">
+                  <i class="fas fa-key"></i> Reset Password
+                </button>
+                <button class="btn btn-outline btn-sm" style="width: 100%; font-size: 12px; justify-content: center;">
+                  <i class="fas fa-eye"></i> View VMs
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+const userId = window.location.pathname.split('/')[3]; // Extract ID from /admin/users/:id/edit
+
+async function loadUser() {
+  try {
+    const res = await fetch(`/api/admin/users/${userId}`);
+    if (!res.ok) throw new Error('User not found');
+    
+    currentUser = await res.json();
+    
+    document.getElementById('username').value = currentUser.username || '';
+    document.getElementById('email').value = currentUser.email || '';
+    document.getElementById('fullName').value = currentUser.full_name || '';
+    document.getElementById('isActive').checked = currentUser.is_active !== false;
+    
+    document.querySelector(`input[name="role"][value="${currentUser.role}"]`).checked = true;
+    
+    // Update status badge
+    const statusBadge = document.getElementById('statusBadge');
+    if (currentUser.is_active) {
+      statusBadge.className = 'badge badge-running';
+      statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Active';
+    } else {
+      statusBadge.className = 'badge badge-stopped';
+      statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Inactive';
+    }
+    
+    // Disable delete button for default admin
+    if (currentUser.id === 1) {
+      document.getElementById('deleteBtn').disabled = true;
+      document.getElementById('deleteBtn').style.opacity = '0.5';
+      document.getElementById('deleteBtn').style.cursor = 'not-allowed';
+    }
+    
+    // Update preview
+    updatePreview();
+    
+  } catch(e) {
+    showAlert('Failed to load user: ' + e.message, 'error');
+  }
+}
+
+function updatePreview() {
+  const username = currentUser?.username || 'Username';
+  const email = document.getElementById('email').value.trim() || 'Not set';
+  const fullName = document.getElementById('fullName').value.trim() || 'Not set';
+  const role = document.querySelector('input[name="role"]:checked').value;
+  const isActive = document.getElementById('isActive').checked;
+
+  // Update avatar
+  const firstChar = (username.charAt(0) || '?').toUpperCase();
+  document.getElementById('previewAvatar').textContent = firstChar;
+
+  // Update user info
+  document.getElementById('previewUsername').textContent = username;
+  document.getElementById('previewRole').textContent = role === 'admin' ? '🔑 Administrator' : '👤 Regular User';
+  document.getElementById('previewId').textContent = currentUser?.id || '-';
+  
+  // Format created date
+  if (currentUser?.created_at) {
+    const date = new Date(currentUser.created_at);
+    document.getElementById('previewCreated').textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } else {
+    document.getElementById('previewCreated').textContent = '-';
+  }
+  
+  document.getElementById('previewEmail').textContent = email;
+  document.getElementById('previewFullName').textContent = fullName;
+
+  // Update status badge
+  const statusBadge = document.getElementById('previewStatusBadge');
+  if (isActive) {
+    statusBadge.innerHTML = '<span style="width: 6px; height: 6px; background: #10B981; border-radius: 50%; display: inline-block;"></span><span style="font-size: 12px; color: #10B981; font-weight: 500;">Active</span>';
+  } else {
+    statusBadge.innerHTML = '<span style="width: 6px; height: 6px; background: #64748b; border-radius: 50%; display: inline-block;"></span><span style="font-size: 12px; color: #64748b; font-weight: 500;">Inactive</span>';
+    statusBadge.style.background = 'rgba(100, 116, 139, 0.1)';
+    statusBadge.style.borderColor = 'rgba(100, 116, 139, 0.2)';
+  }
+}
+
+function togglePasswordVisibility(fieldId) {
+  const field = document.getElementById(fieldId);
+  const icon = fieldId === 'password' ? document.getElementById('passwordEyeIcon') : document.getElementById('confirmPasswordEyeIcon');
+  
+  if (field.type === 'password') {
+    field.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    field.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+function showAlert(message, type = 'error') {
+  const alertBox = document.getElementById('alertBox');
+  const icons = { error: 'fa-times-circle', success: 'fa-check-circle', warning: 'fa-exclamation-circle', info: 'fa-info-circle' };
+  const colors = { error: '#EF4444', success: '#10B981', warning: '#F59E0B', info: '#3B82F6' };
+  
+  alertBox.innerHTML = `
+    <div style="padding: 12px; background: rgba(${type === 'error' ? '239, 68, 68' : type === 'success' ? '16, 185, 129' : type === 'warning' ? '245, 158, 11' : '59, 130, 246'}, 0.1); border: 1px solid rgba(${type === 'error' ? '239, 68, 68' : type === 'success' ? '16, 185, 129' : type === 'warning' ? '245, 158, 11' : '59, 130, 246'}, 0.3); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+      <i class="fas ${icons[type]}" style="color: ${colors[type]};"></i>
+      <span style="color: ${colors[type]}; font-size: 13px;">${message}</span>
+    </div>
+  `;
+  alertBox.style.display = 'block';
+}
+
+function hideAlert() {
+  document.getElementById('alertBox').style.display = 'none';
+}
+
+async function updateUser() {
+  hideAlert();
+  
+  const email = document.getElementById('email').value.trim();
+  const fullName = document.getElementById('fullName').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
+  const isActive = document.getElementById('isActive').checked;
+  
+  // Validation
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { 
+    showAlert('Invalid email address', 'error'); 
+    return; 
+  }
+  
+  if (password && password.length < 6) { 
+    showAlert('Password must be at least 6 characters', 'error'); 
+    return; 
+  }
+  
+  if (password && password !== confirmPassword) { 
+    showAlert('Passwords do not match', 'error'); 
+    return; 
+  }
+  
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  const originalHtml = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  
+  try {
+    const payload = {
+      email: email || null,
+      full_name: fullName || null,
+      role,
+      is_active: isActive
+    };
+    
+    if (password) {
+      payload.password = password;
+    }
+    
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok && data.success) {
+      showAlert('User updated successfully!', 'success');
+      setTimeout(() => {
+        window.location.href = '/admin/users';
+      }, 1500);
+    } else {
+      throw new Error(data.error || 'Failed to update user');
+    }
+  } catch(e) {
+    showAlert(e.message, 'error');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalHtml;
+  }
+}
+
+async function deleteUser() {
+  if (currentUser.id === 1) {
+    showAlert('Cannot delete the default admin user', 'error');
+    return;
+  }
+  
+  const confirmed = confirm(`Are you sure you want to delete user "${currentUser.username}"? This action cannot be undone.`);
+  if (!confirmed) return;
+  
+  const deleteBtn = document.getElementById('deleteBtn');
+  deleteBtn.disabled = true;
+  const originalHtml = deleteBtn.innerHTML;
+  deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+  
+  try {
+    const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+    const data = await res.json();
+    
+    if (res.ok && data.success) {
+      showAlert('User deleted successfully', 'success');
+      setTimeout(() => {
+        window.location.href = '/admin/users';
+      }, 1500);
+    } else {
+      throw new Error(data.error || 'Failed to delete user');
+    }
+  } catch(e) {
+    showAlert('Delete failed: ' + e.message, 'error');
+    deleteBtn.disabled = false;
+    deleteBtn.innerHTML = originalHtml;
+  }
+}
+
+// Update status badge when checkbox changes
+document.getElementById('isActive').addEventListener('change', (e) => {
+  const statusBadge = document.getElementById('statusBadge');
+  if (e.target.checked) {
+    statusBadge.className = 'badge badge-running';
+    statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Active';
+  } else {
+    statusBadge.className = 'badge badge-stopped';
+    statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Inactive';
+  }
+  updatePreview();
+});
+
+// Load user on page load
+loadUser();
+</script>
+</body>
+</html>
+
