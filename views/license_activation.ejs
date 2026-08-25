@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0f">
+    <title><%= title || 'Activate License - HKVM Panel' %></title>
+    <link rel="icon" href="<%= siteLogo %>" type="image/png">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- ============ SVG ICON SPRITE ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-5.9 13.9a6 6 0 1 1-8.485-8.485 6 6 0 0 1 8.485 8.485z"/><circle cx="11" cy="13" r="1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36M20.49 15a9 9 0 0 1-14.85 3.36"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+  </defs>
+</svg>
+
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--bg-primary) 0%, rgba(18,18,18,0.8) 100%); padding:20px;">
+  <div style="width:100%; max-width:500px;">
+    <!-- Logo/Branding -->
+    <div style="text-align:center; margin-bottom:40px;">
+      <div style="width:60px; height:60px; margin:0 auto 16px; background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.15)); border-radius:16px; display:flex; align-items:center; justify-content:center; color:#6366F1;">
+        <svg width="32" height="32"><use href="#i-shield"/></svg>
+      </div>
+      <h1 style="font-size:28px; font-weight:800; color:var(--text-primary); margin:0 0 8px; font-family:Inter, sans-serif;">
+        <%= siteName || 'HKVM Panel' %>
+      </h1>
+      <p style="font-size:14px; color:var(--text-muted); margin:0;">License Activation Required</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <!-- Header -->
+      <div style="padding:24px; background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.03)); border-bottom:1px solid var(--border-color); display:flex; align-items:center; gap:12px;">
+        <div style="width:40px; height:40px; background:rgba(99,102,241,0.1); border-radius:10px; display:flex; align-items:center; justify-content:center; color:#6366F1; flex-shrink:0;">
+          <svg width="20" height="20"><use href="#i-key"/></svg>
+        </div>
+        <div>
+          <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin:0;">Activate License</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Enter your license key to activate this panel</div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="card-body">
+        <!-- Info Alert -->
+        <div style="padding:14px 16px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.2); border-radius:8px; display:flex; gap:12px; align-items:flex-start; margin-bottom:24px;">
+          <div style="width:20px; height:20px; background:rgba(99,102,241,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#6366F1; flex-shrink:0; font-size:11px; font-weight:700;">
+            i
+          </div>
+          <div>
+            <div style="font-size:12px; color:var(--text-primary); font-weight:600; margin-bottom:2px;">License Required</div>
+            <div style="font-size:11px; color:var(--text-muted); line-height:1.5;">
+              This HKVM panel requires an active license to operate. Please enter your license key below to activate.
+            </div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form id="licenseForm" onsubmit="handleActivate(event)">
+          <div class="form-group">
+            <label class="form-label">License Key <span style="color:var(--accent-red); font-weight:700;">*</span></label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="width:36px; height:36px; background:rgba(99,102,241,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#6366F1;">
+                <svg width="16" height="16"><use href="#i-lock"/></svg>
+              </div>
+              <input type="text" class="form-control" id="licenseKeyInput" placeholder="Enter your license key here..." required style="flex:1;" autocomplete="off">
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:8px; line-height:1.5;">
+              Your license key should be in the format: <code style="background:rgba(99,102,241,0.1); padding:2px 6px; border-radius:4px;">XXXX-XXXX-XXXX-XXXX</code>
+            </div>
+          </div>
+
+          <!-- Alert Messages -->
+          <div id="messageContainer" style="margin-bottom:20px;"></div>
+
+          <!-- Button -->
+          <button type="submit" class="btn btn-primary" id="activateBtn" style="width:100%; padding:12px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+            <svg width="16" height="16"><use href="#i-check"/></svg>
+            Activate License
+          </button>
+        </form>
+
+        <!-- Help Section -->
+        <div style="padding:16px; background:rgba(255,255,255,0.02); border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color); margin-top:24px; border-radius:8px;">
+          <div style="font-size:12px; font-weight:600; color:var(--text-primary); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" style="color:var(--text-muted);"><use href="#i-info"/></svg>
+            Don't have a license key?
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); line-height:1.6;">
+            Contact your system administrator or visit the license provider to obtain a valid license key. Once you have your key, enter it above to activate this panel.
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding:16px; background:rgba(255,255,255,0.01); border-top:1px solid var(--border-color); text-align:center; font-size:11px; color:var(--text-muted);">
+        HKVM Panel v<%= panelVersion || '1.0' %> • © 2025 HopingBoyz
+      </div>
+    </div>
+
+    <!-- Status Info -->
+    <div style="margin-top:24px; padding:16px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.1); border-radius:12px; text-align:center;">
+      <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
+        <strong>System Status:</strong><br>
+        <span id="statusText">Checking license status...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function escapeHtml(text) {
+  const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+function showMessage(message, type) {
+  const container = document.getElementById('messageContainer');
+  const alertClass = type === 'success' ? 'alert alert-success' : 'alert alert-error';
+  const icon = type === 'success' ? '<svg width="16" height="16" style="flex-shrink:0;"><use href="#i-check"/></svg>' : '<svg width="16" height="16" style="flex-shrink:0;"><use href="#i-alert"/></svg>';
+  
+  const alertDiv = document.createElement('div');
+  alertDiv.className = alertClass;
+  alertDiv.style.display = 'flex';
+  alertDiv.style.gap = '12px';
+  alertDiv.style.alignItems = 'flex-start';
+  alertDiv.innerHTML = `${icon}<div style="flex:1; font-size:13px;">${escapeHtml(message)}</div>`;
+  
+  container.innerHTML = '';
+  container.appendChild(alertDiv);
+  
+  if (type === 'success') {
+    setTimeout(() => {
+      alertDiv.style.opacity = '0';
+      alertDiv.style.transition = 'opacity 0.3s';
+      setTimeout(() => alertDiv.remove(), 300);
+    }, 2000);
+  }
+}
+
+async function handleActivate(event) {
+  event.preventDefault();
+  
+  const licenseKey = document.getElementById('licenseKeyInput').value.trim();
+  const btn = document.getElementById('activateBtn');
+  const originalText = btn.innerHTML;
+  
+  if (!licenseKey) {
+    showMessage('Please enter a license key', 'error');
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="16" height="16" style="animation:spin 0.6s linear infinite;"><use href="#i-refresh"/></svg>Activating...';
+  
+  try {
+    const response = await fetch('/api/license/activate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ license_key: licenseKey })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showMessage(data.message, 'success');
+      setTimeout(() => {
+        window.location.href = data.redirect || '/login';
+      }, 1500);
+    } else {
+      showMessage(data.message || 'Failed to activate license', 'error');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  } catch (error) {
+    showMessage('Network error: ' + error.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+async function checkLicenseStatus() {
+  try {
+    const response = await fetch('/api/license/status');
+    const data = await response.json();
+    const statusText = document.getElementById('statusText');
+    
+    if (data.activated) {
+      statusText.innerHTML = `<span style="color:var(--color-emerald);">✓ License is ACTIVE</span><br>Owner: ${escapeHtml(data.owner || 'Unknown')}`;
+    } else {
+      statusText.innerHTML = '<span style="color:var(--color-red);">⚠ No active license</span>';
+    }
+  } catch (error) {
+    document.getElementById('statusText').innerHTML = 'Unable to check license status';
+  }
+}
+
+// Check status on page load
+document.addEventListener('DOMContentLoaded', checkLicenseStatus);
+
+// Spin animation
+const style = document.createElement('style');
+style.innerHTML = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>
