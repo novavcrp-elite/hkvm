@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Create LXC - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content">
+      <div class="page-header"><h1 class="page-title">Create LXC Container</h1></div>
+      <div class="card" style="max-width:800px;">
+        <div class="card-body">
+          <form id="createForm" onsubmit="createLXC(event)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group"><label class="form-label">Container Name <span class="required">*</span></label><input type="text" class="form-control" name="name" placeholder="e.g., ubuntu-lxc-01" required></div>
+              <div class="form-group"><label class="form-label">Hostname</label><input type="text" class="form-control" name="hostname" placeholder="Defaults to container name"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group"><label class="form-label">Node <span class="required">*</span></label><select class="form-control" name="node_id" id="nodeSelect" required><option value="">Loading nodes...</option></select></div>
+              <div class="form-group"><label class="form-label">OS Template <span class="required">*</span></label><select class="form-control" name="template_key" id="templateSelect" required><option value="">Loading templates...</option></select></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+              <div class="form-group"><label class="form-label">CPU Cores</label><input type="number" class="form-control" name="cpu_cores" value="2" min="1" max="128"></div>
+              <div class="form-group"><label class="form-label">RAM (MB)</label><input type="number" class="form-control" name="memory" value="2048" min="128"></div>
+              <div class="form-group"><label class="form-label">Swap (MB)</label><input type="number" class="form-control" name="swap" value="2048" min="0"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group"><label class="form-label">Disk Size</label><input type="text" class="form-control" name="disk_size" value="20G" placeholder="e.g., 20G"></div>
+              <div class="form-group"><label class="form-label">Root Password</label><input type="password" class="form-control" name="password" value="password"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group"><label class="form-label">Network Type</label><select class="form-control" name="network_type"><option value="dhcp">DHCP</option><option value="static">Static IP</option></select></div>
+              <div class="form-group"><label class="form-label">IPv4 Address</label><input type="text" class="form-control" name="ipv4_address" placeholder="Only for static"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-control" name="description" placeholder="Optional description"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <button type="submit" class="btn btn-primary" id="submitBtn">Create Container</button>
+              <a href="/lxc" class="btn btn-ghost">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+<script>
+async function loadData(){
+  try{
+    const[nodesRes,templatesRes]=await Promise.all([fetch('/api/nodes/user/allowed'),fetch('/api/lxc-templates')]);
+    const nodes=await nodesRes.json();
+    const templates=await templatesRes.json();
+    const ns=document.getElementById('nodeSelect');
+    ns.innerHTML='<option value="auto">Auto (Best Node)</option>'+nodes.map(n=>`<option value="${n.id}">${n.name} (${n.location||n.hostname})</option>`).join('');
+    const ts=document.getElementById('templateSelect');
+    ts.innerHTML=templates.map(t=>`<option value="${t.template_key}">${t.icon} ${t.template_name}</option>`).join('');
+  }catch(e){showToast('Failed to load data: '+e.message,'error');}
+}
+async function createLXC(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Creating...';
+  const form=new FormData(e.target);
+  const data=Object.fromEntries(form);
+  if(data.node_id==='auto')delete data.node_id;
+  try{
+    const res=await fetch('/api/lxc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const result=await res.json();
+    if(!res.ok)throw new Error(result.error||'Failed');
+    showToast('Container created!','success');
+    setTimeout(()=>window.location.href=`/lxc/${result.id}`,1000);
+  }catch(err){showToast(err.message,'error');btn.disabled=false;btn.textContent='Create Container';}
+}
+loadData();
+</script>
+</body>
+</html>
