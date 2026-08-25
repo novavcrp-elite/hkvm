@@ -421,17 +421,17 @@ function renderGridView(containers, container) {
 
 function renderLXCCard(c) {
   const status = c.status || 'stopped';
-  const osIcons = {
-    ubuntu: '🐧', debian: '🔴', alpine: '🏔️', centos: '🔷', fedora: '🎩'
-  };
-  const osEmoji = osIcons[(c.os_type || '').toLowerCase()] || '📦';
+  const icon = c.template_icon;
+  const displayIcon = (icon && icon.startsWith('http')) ? icon : null;
+  const osEmojiMap = { ubuntu: '🐧', debian: '🐧', alpine: '🏔️', centos: '🔷', fedora: '🎩' };
+  const osEmoji = osEmojiMap[(c.os_type || '').toLowerCase()] || '📦';
 
   return `
     <div class="vm-card-enhanced ${status}" onclick="window.location.href='/lxc/${c.id}'">
       <div class="vm-card-header">
         <div class="vm-title-block">
-          <div class="vm-os-icon" style="font-size: 20px; display: flex; align-items: center; justify-content: center;">
-            ${osEmoji}
+          <div class="vm-os-icon">
+            ${displayIcon ? '<img src="' + displayIcon + '" alt="OS" onerror="this.parentElement.innerHTML=\'📦\'">' : '<span style="font-size:20px;">' + osEmoji + '</span>'}
           </div>
           <div style="min-width: 0; flex: 1;">
             <div class="vm-name-enhanced">${escHtml(c.name)}</div>
@@ -522,15 +522,17 @@ function renderListView(containers, container) {
           <tbody>
             ${containers.map(c => {
               const status = c.status || 'stopped';
-              const osIcons = { ubuntu: '🐧', debian: '🔴', alpine: '🏔️', centos: '🔷' };
-              const osEmoji = osIcons[(c.os_type || '').toLowerCase()] || '📦';
+              const tIcon = c.template_icon;
+              const tDisplayIcon = (tIcon && tIcon.startsWith('http')) ? tIcon : null;
+              const tOsEmojiMap = { ubuntu: '🐧', debian: '🐧', alpine: '🏔️', centos: '🔷' };
+              const tOsEmoji = tOsEmojiMap[(c.os_type || '').toLowerCase()] || '📦';
 
               return `
               <tr>
                 <td>
                   <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="vm-os-icon" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; border-radius: 10px; background: rgba(99,102,241,0.1);">
-                      ${osEmoji}
+                    <div class="vm-os-icon" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(99,102,241,0.1); overflow: hidden;">
+                      ${tDisplayIcon ? '<img src="' + tDisplayIcon + '" alt="OS" style="width:100%;height:100%;object-fit:cover;border-radius:10px" onerror="this.parentElement.innerHTML=\'📦\'">' : '<span style="font-size:18px;">' + tOsEmoji + '</span>'}
                     </div>
                     <div>
                       <a href="/lxc/${c.id}" class="vm-name-link">${escHtml(c.name)}</a>

@@ -755,11 +755,11 @@ function initializeDatabase() {
 
     // Initialize default LXC templates
     const defaultLxcTemplates = [
-      { key: 'ubuntu_24_lxc', name: 'Ubuntu 24.04 LXC', icon: '🐧', username: 'ubuntu', password: 'ubuntu', disk: '20G', mem: 2048, cpus: 2, swap: 2048 },
-      { key: 'ubuntu_22_lxc', name: 'Ubuntu 22.04 LXC', icon: '🐧', username: 'ubuntu', password: 'ubuntu', disk: '20G', mem: 2048, cpus: 2, swap: 2048 },
-      { key: 'debian_12_lxc', name: 'Debian 12 LXC', icon: '🔴', username: 'root', password: 'debian', disk: '20G', mem: 1024, cpus: 1, swap: 1024 },
-      { key: 'alpine_lxc', name: 'Alpine Linux LXC', icon: '🏔️', username: 'root', password: 'alpine', disk: '5G', mem: 512, cpus: 1, swap: 512 },
-      { key: 'centos_9_lxc', name: 'CentOS Stream 9 LXC', icon: '🔷', username: 'root', password: 'centos', disk: '20G', mem: 2048, cpus: 2, swap: 2048 }
+      { key: 'ubuntu_24_lxc', name: 'Ubuntu 24.04 LXC', icon: 'https://i.imgur.com/wu0Ob6B.png', username: 'ubuntu', password: 'ubuntu', disk: '20G', mem: 2048, cpus: 2, swap: 2048 },
+      { key: 'ubuntu_22_lxc', name: 'Ubuntu 22.04 LXC', icon: 'https://i.imgur.com/wu0Ob6B.png', username: 'ubuntu', password: 'ubuntu', disk: '20G', mem: 2048, cpus: 2, swap: 2048 },
+      { key: 'debian_12_lxc', name: 'Debian 12 LXC', icon: 'https://i.imgur.com/C4SiENP.png', username: 'root', password: 'debian', disk: '20G', mem: 1024, cpus: 1, swap: 1024 },
+      { key: 'alpine_lxc', name: 'Alpine Linux LXC', icon: 'https://i.imgur.com/YcYGa2c.png', username: 'root', password: 'alpine', disk: '5G', mem: 512, cpus: 1, swap: 512 },
+      { key: 'centos_9_lxc', name: 'CentOS Stream 9 LXC', icon: 'https://i.imgur.com/MgxK5WZ.png', username: 'root', password: 'centos', disk: '20G', mem: 2048, cpus: 2, swap: 2048 }
     ];
     defaultLxcTemplates.forEach(t => {
       db.run(`INSERT OR IGNORE INTO lxc_templates (template_key, template_name, icon, username, password, disk_size, memory, cpus, swap, is_custom, is_active)
@@ -1952,11 +1952,23 @@ app.get('/api/vms', checkAuth, (req, res) => {
   // User pages always show ONLY the logged-in user's own VMs
   // (even if user is admin - they see their own VMs, not all VMs)
   // For all VMs, use /api/admin/vms endpoint
-  let query = `SELECT vms.*, COALESCE(t.icon, '⚫') as template_icon, COALESCE(t.template_name, vms.os_type) as template_name
-              FROM vms 
-              LEFT JOIN os_templates t ON vms.template_type = t.template_key
-              WHERE vms.owner_id = ?
-              ORDER BY vms.vm_id DESC`;
+  let query = `SELECT vms.*,
+    CASE WHEN t.icon LIKE 'http%' THEN t.icon ELSE
+      CASE
+        WHEN vms.os_type LIKE '%ubuntu%' OR vms.template_type LIKE '%ubuntu%' THEN 'https://i.imgur.com/wu0Ob6B.png'
+        WHEN vms.os_type LIKE '%debian%' OR vms.template_type LIKE '%debian%' THEN 'https://i.imgur.com/C4SiENP.png'
+        WHEN vms.os_type LIKE '%fedora%' OR vms.template_type LIKE '%fedora%' THEN 'https://i.imgur.com/iq4y3J8.png'
+        WHEN vms.os_type LIKE '%centos%' OR vms.template_type LIKE '%centos%' THEN 'https://i.imgur.com/MgxK5WZ.png'
+        WHEN vms.os_type LIKE '%almalinux%' OR vms.template_type LIKE '%almalinux%' THEN 'https://i.imgur.com/YcYGa2c.png'
+        WHEN vms.os_type LIKE '%alpine%' OR vms.template_type LIKE '%alpine%' THEN 'https://i.imgur.com/YcYGa2c.png'
+        ELSE 'https://i.imgur.com/wu0Ob6B.png'
+      END
+    END as template_icon,
+    COALESCE(t.template_name, vms.os_type) as template_name
+    FROM vms 
+    LEFT JOIN os_templates t ON vms.template_type = t.template_key
+    WHERE vms.owner_id = ?
+    ORDER BY vms.vm_id DESC`;
   let params = [userId];
   
   db.all(query, params, (err, vms) => {
@@ -1974,10 +1986,22 @@ app.get('/api/admin/vms', checkAuth, checkAdmin, (req, res) => {
   const userId = req.session.userId;
   
   // Admin pages can see ALL VMs in the system
-  let query = `SELECT vms.*, COALESCE(t.icon, '⚫') as template_icon, COALESCE(t.template_name, vms.os_type) as template_name
-              FROM vms 
-              LEFT JOIN os_templates t ON vms.template_type = t.template_key
-              ORDER BY vms.vm_id DESC`;
+  let query = `SELECT vms.*,
+    CASE WHEN t.icon LIKE 'http%' THEN t.icon ELSE
+      CASE
+        WHEN vms.os_type LIKE '%ubuntu%' OR vms.template_type LIKE '%ubuntu%' THEN 'https://i.imgur.com/wu0Ob6B.png'
+        WHEN vms.os_type LIKE '%debian%' OR vms.template_type LIKE '%debian%' THEN 'https://i.imgur.com/C4SiENP.png'
+        WHEN vms.os_type LIKE '%fedora%' OR vms.template_type LIKE '%fedora%' THEN 'https://i.imgur.com/iq4y3J8.png'
+        WHEN vms.os_type LIKE '%centos%' OR vms.template_type LIKE '%centos%' THEN 'https://i.imgur.com/MgxK5WZ.png'
+        WHEN vms.os_type LIKE '%almalinux%' OR vms.template_type LIKE '%almalinux%' THEN 'https://i.imgur.com/YcYGa2c.png'
+        WHEN vms.os_type LIKE '%alpine%' OR vms.template_type LIKE '%alpine%' THEN 'https://i.imgur.com/YcYGa2c.png'
+        ELSE 'https://i.imgur.com/wu0Ob6B.png'
+      END
+    END as template_icon,
+    COALESCE(t.template_name, vms.os_type) as template_name
+    FROM vms 
+    LEFT JOIN os_templates t ON vms.template_type = t.template_key
+    ORDER BY vms.vm_id DESC`;
   let params = [];
   
   db.all(query, params, (err, vms) => {
@@ -1995,7 +2019,17 @@ app.get('/api/vms/:vm_id', checkAuth, (req, res) => {
   let query = `
     SELECT 
       vms.*,
-      COALESCE(ot.icon, '⚫') as template_icon
+      CASE WHEN ot.icon LIKE 'http%' THEN ot.icon ELSE
+        CASE
+          WHEN vms.os_type LIKE '%ubuntu%' OR vms.template_type LIKE '%ubuntu%' THEN 'https://i.imgur.com/wu0Ob6B.png'
+          WHEN vms.os_type LIKE '%debian%' OR vms.template_type LIKE '%debian%' THEN 'https://i.imgur.com/C4SiENP.png'
+          WHEN vms.os_type LIKE '%fedora%' OR vms.template_type LIKE '%fedora%' THEN 'https://i.imgur.com/iq4y3J8.png'
+          WHEN vms.os_type LIKE '%centos%' OR vms.template_type LIKE '%centos%' THEN 'https://i.imgur.com/MgxK5WZ.png'
+          WHEN vms.os_type LIKE '%almalinux%' OR vms.template_type LIKE '%almalinux%' THEN 'https://i.imgur.com/YcYGa2c.png'
+          WHEN vms.os_type LIKE '%alpine%' OR vms.template_type LIKE '%alpine%' THEN 'https://i.imgur.com/YcYGa2c.png'
+          ELSE 'https://i.imgur.com/wu0Ob6B.png'
+        END
+      END as template_icon
     FROM vms
     LEFT JOIN os_templates ot ON vms.template_type = ot.template_key
     WHERE vms.vm_id = ?

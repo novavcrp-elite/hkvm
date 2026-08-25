@@ -209,8 +209,8 @@ async function createContainer(data, userId, ipAddress) {
 
 async function getContainer(id, userId, isAdmin) {
   const query = isAdmin
-    ? `SELECT lxc.*, n.name as node_name, n.hostname as node_hostname FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id WHERE lxc.id = ?`
-    : `SELECT lxc.*, n.name as node_name, n.hostname as node_hostname FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id WHERE lxc.id = ? AND lxc.owner_id = ?`;
+    ? `SELECT lxc.*, n.name as node_name, n.hostname as node_hostname, lt.icon as template_icon, lt.template_name as template_display_name FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id LEFT JOIN lxc_templates lt ON lxc.template_key = lt.template_key WHERE lxc.id = ?`
+    : `SELECT lxc.*, n.name as node_name, n.hostname as node_hostname, lt.icon as template_icon, lt.template_name as template_display_name FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id LEFT JOIN lxc_templates lt ON lxc.template_key = lt.template_key WHERE lxc.id = ? AND lxc.owner_id = ?`;
   const params = isAdmin ? [id] : [id, userId];
 
   return new Promise((resolve, reject) => {
@@ -220,8 +220,8 @@ async function getContainer(id, userId, isAdmin) {
 
 async function listContainers(userId, isAdmin) {
   const query = isAdmin
-    ? `SELECT lxc.*, n.name as node_name FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id WHERE lxc.status != 'deleted' ORDER BY lxc.created_at DESC`
-    : `SELECT lxc.*, n.name as node_name FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id WHERE lxc.owner_id = ? AND lxc.status != 'deleted' ORDER BY lxc.created_at DESC`;
+    ? `SELECT lxc.*, n.name as node_name, lt.icon as template_icon, lt.template_name as template_display_name FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id LEFT JOIN lxc_templates lt ON lxc.template_key = lt.template_key WHERE lxc.status != 'deleted' ORDER BY lxc.created_at DESC`
+    : `SELECT lxc.*, n.name as node_name, lt.icon as template_icon, lt.template_name as template_display_name FROM lxc_containers lxc LEFT JOIN nodes n ON lxc.node_id = n.id LEFT JOIN lxc_templates lt ON lxc.template_key = lt.template_key WHERE lxc.owner_id = ? AND lxc.status != 'deleted' ORDER BY lxc.created_at DESC`;
   const params = isAdmin ? [] : [userId];
 
   return new Promise((resolve, reject) => {
