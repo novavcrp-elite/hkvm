@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Create VM - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- ============ SVG ICON SPRITE ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-forward" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M15 9h.01M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/></symbol>
+    <symbol id="i-disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-preview" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-port" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="20" height="12" rx="2"/><line x1="6" y1="14" x2="6.01" y2="14"/><line x1="10" y1="14" x2="10.01" y2="14"/><line x1="14" y1="14" x2="14.01" y2="14"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-tools" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v2H7V4a2 2 0 0 1 2-2z"/><rect x="4" y="6" width="16" height="16" rx="2"/></symbol>
+    <symbol id="i-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+    <symbol id="i-play-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/admin/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-section">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+            <a href="/admin/vms" style="color: var(--text-muted); text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+              <svg width="14" height="14"><use href="#i-back"/></svg>
+              Back to VMs
+            </a>
+          </div>
+          <h1 class="page-title">
+            <span class="title-icon" style="color:#EC4899;"><svg width="22" height="22"><use href="#i-wand"/></svg></span>
+            Create Virtual Machine
+          </h1>
+          <p class="page-subtitle">Configure and deploy a new QEMU/KVM virtual machine</p>
+        </div>
+        <div class="page-actions">
+          <div id="createStatus" style="font-size: 12px; color: var(--text-muted);"></div>
+        </div>
+      </div>
+
+      <!-- Wizard Steps -->
+      <div class="wizard-steps" style="margin-bottom: 28px;">
+        <div class="wizard-step active" id="step-1-indicator">
+          <div class="wizard-step-item">
+            <div class="wizard-step-num">1</div>
+            <div class="wizard-step-label">Template</div>
+          </div>
+        </div>
+        <div class="wizard-connector" id="conn-1"></div>
+        <div class="wizard-step" id="step-2-indicator">
+          <div class="wizard-step-item">
+            <div class="wizard-step-num">2</div>
+            <div class="wizard-step-label">Hardware</div>
+          </div>
+        </div>
+        <div class="wizard-connector" id="conn-2"></div>
+        <div class="wizard-step" id="step-3-indicator">
+          <div class="wizard-step-item">
+            <div class="wizard-step-num">3</div>
+            <div class="wizard-step-label">Network</div>
+          </div>
+        </div>
+        <div class="wizard-connector" id="conn-3"></div>
+        <div class="wizard-step" id="step-4-indicator">
+          <div class="wizard-step-item">
+            <div class="wizard-step-num">4</div>
+            <div class="wizard-step-label">Advanced</div>
+          </div>
+        </div>
+        <div class="wizard-connector" id="conn-4"></div>
+        <div class="wizard-step" id="step-5-indicator">
+          <div class="wizard-step-item">
+            <div class="wizard-step-num">5</div>
+            <div class="wizard-step-label">Review</div>
+          </div>
+        </div>
+      </div>
+
+      <form id="createVMForm">
+
+      <!-- ============ STEP 1: TEMPLATE ============ -->
+      <div id="step-1" class="wizard-page">
+        <div style="display: grid; grid-template-columns: 1fr 360px; gap: 20px;">
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#6366F1;display:inline-flex;"><svg width="18" height="18"><use href="#i-server"/></svg></span>
+                  Select OS Template
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">VM Name <span class="required">*</span></label>
+                  <input type="text" class="form-control" id="vm_name" name="vm_name" placeholder="e.g., web-server-01" required>
+                  <div class="form-hint">Lowercase letters, numbers, hyphens. Must be unique.</div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Hostname</label>
+                  <input type="text" class="form-control" id="hostname" name="hostname" placeholder="e.g., web-server">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">OS Template <span class="required">*</span></label>
+                  <div class="template-grid" id="templateGrid">
+                    <div style="padding: 20px; text-align: center; grid-column: 1/-1;">
+                      <div class="spinner" style="margin: 0 auto;"></div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="os_template" name="os_template">
+                </div>
+
+                <div style="margin-top: 16px; padding: 14px; background: rgba(99, 102, 241, 0.06); border-radius: var(--radius-md); border: 1px solid rgba(99, 102, 241, 0.15);">
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 10px; display:flex; align-items:center; gap:6px;">
+                    <span style="color:#6366F1; display:inline-flex;"><svg width="12" height="12"><use href="#i-info"/></svg></span>
+                    Template Details
+                  </div>
+                  <div id="templateDetails" style="font-size: 13px; color: var(--text-muted);">Select a template above to see details</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom ISO Section -->
+            <div class="card" style="margin-top: 16px;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#06B6D4;display:inline-flex;"><svg width="18" height="18"><use href="#i-disc"/></svg></span>
+                  Or Use ISO File
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">ISO File (leave empty to use template above)</label>
+                  <select class="form-control" id="iso_file" name="iso_file" onchange="handleIsoSelect()">
+                    <option value="">— Use OS Template —</option>
+                  </select>
+                  <div class="form-hint">ISO files from the /iso directory will appear here</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Credentials -->
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#F59E0B;display:inline-flex;"><svg width="18" height="18"><use href="#i-key"/></svg></span>
+                  Credentials
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Username</label>
+                  <input type="text" class="form-control" id="custom_username" name="custom_username" placeholder="Default from template" oninput="validateUsername()">
+                  <div class="form-hint" id="usernameHint" style="display:flex;align-items:center;gap:6px;">
+                    <span style="color:#3B82F6;display:inline-flex;"><svg width="12" height="12"><use href="#i-info"/></svg></span>
+                    Leave empty to use template default. Can use "root" for root access.
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Password</label>
+                  <div style="position: relative;">
+                    <input type="password" class="form-control" id="custom_password" name="custom_password" placeholder="Default from template" style="padding-right: 40px;">
+                    <button type="button" onclick="togglePw('custom_password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; display:inline-flex;">
+                      <svg width="16" height="16"><use href="#i-eye"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VM Owner -->
+            <div class="card" style="margin-top: 16px;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#8B5CF6;display:inline-flex;"><svg width="18" height="18"><use href="#i-user"/></svg></span>
+                  VM Owner
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Assign to User <span class="required">*</span></label>
+                  <select class="form-control" id="owner_id" name="owner_id" required onchange="updatePreview()">
+                    <option value="">— Select User —</option>
+                  </select>
+                  <div class="form-hint">VM will be owned and managed by this user</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Preview -->
+            <div class="card" style="margin-top: 16px;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#10B981;display:inline-flex;"><svg width="18" height="18"><use href="#i-preview"/></svg></span>
+                  Configuration Preview
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="configPreview" style="font-size: 12px; color: var(--text-muted); font-family: monospace; background: #0a0a12; padding: 12px; border-radius: 8px; line-height: 1.8;">
+                  <div>VM Name: <span id="prev_name" style="color: #a5f3fc;">—</span></div>
+                  <div>OS: <span id="prev_os" style="color: #a5f3fc;">—</span></div>
+                  <div>RAM: <span id="prev_ram" style="color: #a5f3fc;">—</span></div>
+                  <div>CPU: <span id="prev_cpu" style="color: #a5f3fc;">—</span></div>
+                  <div>Disk: <span id="prev_disk" style="color: #a5f3fc;">—</span></div>
+                  <div>Network: <span id="prev_net" style="color: #a5f3fc;">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ STEP 2: HARDWARE ============ -->
+      <div id="step-2" class="wizard-page" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span style="color:#EC4899;display:inline-flex;"><svg width="18" height="18"><use href="#i-cpu"/></svg></span>
+                CPU Configuration
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">CPU Sockets</label>
+                  <input type="number" class="form-control" name="cpu_sockets" id="cpu_sockets" value="1" min="1" max="16" onchange="updateTotalCPU()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cores per Socket</label>
+                  <input type="number" class="form-control" name="cpu_cores" id="cpu_cores" value="2" min="1" max="64" onchange="updateTotalCPU()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Threads per Core</label>
+                  <select class="form-control" name="cpu_threads" id="cpu_threads" onchange="updateTotalCPU()">
+                    <option value="1">1 (Single)</option>
+                    <option value="2">2 (HyperThreading)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(99, 102, 241, 0.06); border-radius: 8px; margin: 8px 0 16px; border: 1px solid rgba(99, 102, 241, 0.15);">
+                <span style="width:36px;height:36px;border-radius:8px;background:rgba(99,102,241,0.15);color:#6366F1;display:inline-flex;align-items:center;justify-content:center;"><svg width="18" height="18"><use href="#i-cpu"/></svg></span>
+                <div style="flex:1;">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Total vCPUs</div>
+                  <div style="font-size: 22px; font-weight: 700; color: var(--accent-primary);" id="totalCPUDisplay">2</div>
+                </div>
+                <input type="hidden" name="custom_cpus" id="custom_cpus" value="2">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">CPU Model</label>
+                <select class="form-control" name="cpu_model" id="cpu_model">
+                  <!-- Loaded dynamically -->
+                </select>
+                <div class="form-hint">Use 'host' for best performance on physical hardware</div>
+              </div>
+
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                  <input type="checkbox" class="form-check-input" id="enable_custom_cpu_name" name="enable_custom_cpu_name" onchange="toggleCustomCPUName()" style="cursor: pointer; width: 20px; height: 20px;">
+                  <label for="enable_custom_cpu_name" class="form-label" style="margin: 0; cursor: pointer; flex: 1;">
+                    <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #6366F1;">
+                      <svg width="14" height="14"><use href="#i-cpu"/></svg>
+                      <span>Use Custom CPU Name</span>
+                      <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; background: rgba(99, 102, 241, 0.1); padding: 2px 8px; border-radius: 4px;">Optional</span>
+                    </span>
+                  </label>
+                </div>
+                <div id="custom_cpu_name_section" style="display: none; padding: 14px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.03) 100%); border-radius: 8px; border: 1.5px solid rgba(99, 102, 241, 0.2);">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="color:#6366F1;display:inline-flex;"><svg width="13" height="13"><use href="#i-pen"/></svg></span>
+                      Custom CPU Model Name
+                    </label>
+                    <input type="text" class="form-control" name="custom_cpu_name" id="custom_cpu_name" placeholder="e.g., Intel-Xeon-E5-2680v4, AMD-EPYC-7002" oninput="validateCustomCPUName()" style="margin-top: 8px;">
+                    <div style="display: flex; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--text-muted); align-items:center;">
+                      <span id="cpuNameValid" style="color: #10B981; opacity: 0; display:inline-flex;"><svg width="13" height="13"><use href="#i-check-circle"/></svg></span>
+                      <span>Any characters accepted</span>
+                    </div>
+                    <div class="form-hint" style="margin-top: 8px; display: flex; align-items: flex-start; gap: 8px;">
+                      <span style="color:#F59E0B; margin-top: 2px; flex-shrink: 0; display:inline-flex;"><svg width="13" height="13"><use href="#i-bulb"/></svg></span>
+                      <span>
+                        <strong>Examples:</strong> Intel Xeon, AMD EPYC 7003, ThreadRipper PRO, Custom Lab CPU
+                        <br><strong>Tips:</strong> Use any format you want - spaces, special characters all allowed
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom: 16px;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#10B981;display:inline-flex;"><svg width="18" height="18"><use href="#i-mem"/></svg></span>
+                  Memory
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">RAM Amount (MB) <span class="required">*</span></label>
+                  <input type="number" class="form-control" name="custom_memory" id="custom_memory" value="2048" min="512" max="524288" step="512">
+                </div>
+                <div class="radio-cards" style="grid-template-columns: repeat(3, 1fr);">
+                  <div class="radio-card">
+                    <input type="radio" name="_mem_preset" id="mem512" value="512" onclick="setMem(512)">
+                    <label for="mem512" class="radio-card-label">
+                      <div class="radio-card-icon" style="color:#10B981;"><svg width="20" height="20"><use href="#i-mem"/></svg></div>
+                      <div class="radio-card-title">512 MB</div>
+                    </label>
+                  </div>
+                  <div class="radio-card">
+                    <input type="radio" name="_mem_preset" id="mem1024" value="1024" onclick="setMem(1024)">
+                    <label for="mem1024" class="radio-card-label">
+                      <div class="radio-card-icon" style="color:#10B981;"><svg width="20" height="20"><use href="#i-mem"/></svg></div>
+                      <div class="radio-card-title">1 GB</div>
+                    </label>
+                  </div>
+                  <div class="radio-card">
+                    <input type="radio" name="_mem_preset" id="mem2048" value="2048" onclick="setMem(2048)" checked>
+                    <label for="mem2048" class="radio-card-label">
+                      <div class="radio-card-icon" style="color:#10B981;"><svg width="20" height="20"><use href="#i-mem"/></svg></div>
+                      <div class="radio-card-title">2 GB</div>
+                    </label>
+                  </div>
+                  <div class="radio-card">
+                    <input type="radio" name="_mem_preset" id="mem4096" value="4096" onclick="setMem(4096)">
+                    <label for="mem4096" class="radio-card-label">
+                      <div class="radio-card-icon" style="color:#10B981;"><svg width="20" height="20"><use href="#i-mem"/></svg></div>
+                      <div class="radio-card-title">4 GB</div>
+                    </label>
+                  </div>
+                  <div class="radio-card">
+                    <input type="radio" name="_mem_preset" id="mem8192" value="8192" onclick="setMem(8192)">
+                    <label for="mem8192" class="radio-card-label">
+                      <div class="radio-card-icon" style="color:#10B981;"><svg width="20" height="20"><use href="#i-mem"/></svg></div>
+                      <div class="radio-card-title">8 GB</div>
+                    </label>
+                  </div>
+                  <div class="radio-card">
+                    <input type="radio" name="_mem_preset" id="mem16384" value="16384" onclick="setMem(16384)">
+                    <label for="mem16384" class="radio-card-label">
+                      <div class="radio-card-icon" style="color:#10B981;"><svg width="20" height="20"><use href="#i-mem"/></svg></div>
+                      <div class="radio-card-title">16 GB</div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#06B6D4;display:inline-flex;"><svg width="18" height="18"><use href="#i-disc"/></svg></span>
+                  Storage
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Disk Size <span class="required">*</span></label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" name="_disk_size_num" id="disk_size_num" value="20" min="5" max="10000">
+                    <select class="form-control" id="disk_size_unit" style="max-width: 80px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; border-left: none;" onchange="updateDiskSize()">
+                      <option value="G" selected>GB</option>
+                      <option value="T">TB</option>
+                    </select>
+                  </div>
+                  <input type="hidden" name="disk_size" id="disk_size" value="20G">
+                  <div class="form-hint">Minimum 5GB. Disk uses qcow2 format (thin provisioning).</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ STEP 3: NETWORK ============ -->
+      <div id="step-3" class="wizard-page" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span style="color:#3B82F6;display:inline-flex;"><svg width="18" height="18"><use href="#i-network"/></svg></span>
+                Network Type
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <div class="network-type-grid" id="networkTypeGrid" style="grid-template-columns: 1fr 1fr;">
+                  <!-- Loaded dynamically -->
+                </div>
+                <input type="hidden" name="network_type" id="network_type" value="dhcp">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom: 16px;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#8B5CF6;display:inline-flex;"><svg width="18" height="18"><use href="#i-port"/></svg></span>
+                  Ports
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">SSH Port</label>
+                    <input type="number" class="form-control" name="ssh_port" id="ssh_port" placeholder="2222" min="1024" max="65535">
+                    <div class="form-hint">Host port for SSH forwarding</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">HTTP Port</label>
+                    <input type="number" class="form-control" name="http_port" id="http_port" placeholder="80" min="1" max="65535">
+                    <div class="form-hint">Host port for HTTP forwarding</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Static IP Config -->
+            <div class="card" id="staticIpCard" style="display: none;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#F59E0B;display:inline-flex;"><svg width="18" height="18"><use href="#i-map"/></svg></span>
+                  Static IP Configuration
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">IPv4 Address</label>
+                  <input type="text" class="form-control" name="ipv4_address" id="ipv4_address" placeholder="192.168.1.100">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Gateway</label>
+                    <input type="text" class="form-control" name="gateway" id="gateway" placeholder="192.168.1.1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Netmask (CIDR)</label>
+                    <input type="number" class="form-control" name="netmask" id="netmask" value="24" min="8" max="32" placeholder="24">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">DNS Servers</label>
+                  <input type="text" class="form-control" name="dns_servers" id="dns_servers" value="8.8.8.8,8.8.4.4" placeholder="8.8.8.8,8.8.4.4">
+                </div>
+              </div>
+            </div>
+
+            <!-- IPv6 -->
+            <div class="card" id="ipv6Card" style="display: none;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#06B6D4;display:inline-flex;"><svg width="18" height="18"><use href="#i-network"/></svg></span>
+                  IPv6 Configuration
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">IPv6 Address</label>
+                  <input type="text" class="form-control" name="ipv6_address" id="ipv6_address" placeholder="2001:db8::1">
+                  <div class="form-hint">Optional IPv6 address (e.g., 2001:db8::1/64)</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">IPv6 Gateway</label>
+                  <input type="text" class="form-control" name="ipv6_gateway" id="ipv6_gateway" placeholder="2001:db8::1">
+                  <div class="form-hint">Optional IPv6 gateway</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MAC Address -->
+            <div class="card" style="margin-top: 16px;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#EC4899;display:inline-flex;"><svg width="18" height="18"><use href="#i-link"/></svg></span>
+                  MAC Address
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <div class="input-group">
+                    <input type="text" class="form-control" name="mac_address" id="mac_address" placeholder="Auto-generated" style="font-family: monospace;">
+                    <button type="button" class="btn btn-ghost" onclick="genMAC()" style="border-radius: 0 var(--radius-sm) var(--radius-sm) 0;">
+                      <svg width="13" height="13" style="margin-right:4px;"><use href="#i-refresh"/></svg>
+                      Generate
+                    </button>
+                  </div>
+                  <div class="form-hint">Leave empty for auto-generation</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ STEP 4: ADVANCED ============ -->
+      <div id="step-4" class="wizard-page" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span style="color:#6366F1;display:inline-flex;"><svg width="18" height="18"><use href="#i-tools"/></svg></span>
+                SMBIOS / Identity
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Manufacturer</label>
+                <div style="display: grid; gap: 8px;">
+                  <select class="form-control" name="smbios_manufacturer" id="smbios_manufacturer" onchange="toggleCustomManufacturer()">
+                    <option value="QEMU">QEMU</option>
+                    <option value="Proxmox">Proxmox</option>
+                    <option value="Red Hat">Red Hat</option>
+                    <option value="Dell Inc.">Dell Inc.</option>
+                    <option value="HP Inc.">HP Inc.</option>
+                    <option value="Lenovo">Lenovo</option>
+                    <option value="Microsoft Corporation">Microsoft Corporation</option>
+                    <option value="custom">Custom...</option>
+                  </select>
+                  <input type="text" class="form-control" name="custom_manufacturer" id="custom_manufacturer" placeholder="Enter custom manufacturer name" style="display: none; border-color: #6366F1;">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Product Name</label>
+                <div style="display: grid; gap: 8px;">
+                  <select class="form-control" name="smbios_product" id="smbios_product" onchange="toggleCustomProduct()">
+                    <option value="KVM Virtual Machine">KVM Virtual Machine</option>
+                    <option value="Standard PC">Standard PC</option>
+                    <option value="Virtual Machine">Virtual Machine</option>
+                    <option value="Cloud Instance">Cloud Instance</option>
+                    <option value="RHEL Guest">RHEL Guest</option>
+                    <option value="custom">Custom...</option>
+                  </select>
+                  <input type="text" class="form-control" name="custom_product" id="custom_product" placeholder="Enter custom product name" style="display: none; border-color: #6366F1;">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">BIOS Version</label>
+                  <input type="text" class="form-control" name="smbios_version" value="1.0" placeholder="1.0">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Serial Number</label>
+                  <input type="text" class="form-control" name="smbios_serial" placeholder="Auto-generated">
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Board Name</label>
+                <input type="text" class="form-control" name="board_name" value="Main-Board">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom: 16px;">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#F59E0B;display:inline-flex;"><svg width="18" height="18"><use href="#i-bolt"/></svg></span>
+                  VM Options
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Machine Type</label>
+                  <select class="form-control" name="machine_type">
+                    <optgroup label="x86-64 / i386">
+                      <option value="pc" selected>PC (i440fx - Standard, Legacy)</option>
+                      <option value="q35">Q35 (ICH9 - Modern, Recommended)</option>
+                      <option value="microvm">MicroVM (Minimal, Fast Boot)</option>
+                    </optgroup>
+                    <optgroup label="ARM">
+                      <option value="virt">Virtual (ARM Generic Platform)</option>
+                      <option value="versatilepb">Versatile Platform Baseboard</option>
+                      <option value="raspi2">Raspberry Pi 2</option>
+                      <option value="raspi3">Raspberry Pi 3</option>
+                    </optgroup>
+                    <optgroup label="Enterprise">
+                      <option value="pseries">POWER Series (PowerPC)</option>
+                      <option value="s390-ccw-virtio">IBM System Z (s390x)</option>
+                    </optgroup>
+                  </select>
+                  <div class="form-hint" style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+                    <strong>x86-64:</strong> PC for legacy OS, Q35 for modern OS, MicroVM for minimal overhead
+                  </div>
+                </div>
+                
+                <div style="display: grid; gap: 12px; padding: 14px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-subtle);">
+                  <label class="toggle-switch">
+                    <input type="checkbox" class="toggle-input" name="enable_acpi" id="enable_acpi" value="1" checked>
+                    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                    <span class="toggle-label" style="font-size: 13px; color: var(--text-primary);">Enable ACPI</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#10B981;display:inline-flex;"><svg width="18" height="18"><use href="#i-note"/></svg></span>
+                  Extra Arguments
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Additional QEMU Args</label>
+                  <textarea class="form-control" name="extra_args" id="extra_args" placeholder="-device virtio-balloon-pci,id=balloon0" rows="3" style="font-family: monospace; font-size: 12px;"></textarea>
+                  <div class="form-hint">Advanced: Additional QEMU command-line arguments</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ STEP 5: REVIEW ============ -->
+      <div id="step-5" class="wizard-page" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 380px; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span style="color:#6366F1;display:inline-flex;"><svg width="18" height="18"><use href="#i-clipboard"/></svg></span>
+                Review Configuration
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="reviewContent" style="font-size: 13px;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span style="color:#EC4899;display:inline-flex;"><svg width="18" height="18"><use href="#i-rocket"/></svg></span>
+                  Ready to Deploy
+                </div>
+              </div>
+              <div class="card-body">
+                <div style="padding: 20px; text-align: center; border: 2px dashed rgba(99, 102, 241, 0.3); border-radius: 12px; margin-bottom: 16px; background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.03));">
+                  <div style="width:64px; height:64px; margin:0 auto 12px; border-radius:16px; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(99,102,241,0.35); background: white;" id="osLogoBox">
+                    <svg width="30" height="30" style="color: #6366F1;"><use href="#i-server"/></svg>
+                  </div>
+                  <div style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="reviewVMName">—</div>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="reviewVMOS">—</div>
+                </div>
+                
+                <div id="createAlert" style="display: none; margin-bottom: 12px;"></div>
+                
+                <div id="createProgress" style="display: none; margin-bottom: 16px;">
+                  <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;" id="createProgressText">Creating VM...</div>
+                  <div class="progress">
+                    <div class="progress-bar" id="createProgressBar" style="width: 0%; transition: width 0.5s ease;"></div>
+                  </div>
+                </div>
+
+                <button type="button" class="btn btn-primary w-100 btn-lg" id="createBtn" onclick="submitCreate()">
+                  <svg width="16" height="16" style="margin-right:6px;"><use href="#i-play-c"/></svg>
+                  Create Virtual Machine
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div style="display: flex; justify-content: space-between; margin-top: 24px; gap: 12px;">
+        <button type="button" class="btn btn-ghost" id="prevBtn" onclick="prevStep()" style="display: none;">
+          <svg width="13" height="13" style="margin-right:4px;"><use href="#i-back"/></svg>
+          Previous
+        </button>
+        <div style="flex: 1;"></div>
+        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+          Next
+          <svg width="13" height="13" style="margin-left:4px;"><use href="#i-forward"/></svg>
+        </button>
+      </div>
+      </form>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+let osTemplates = {};
+
+// SVG helper for dynamic contexts
+function svg(id, size = 14) {
+  return `<svg width="${size}" height="${size}"><use href="#${id}"/></svg>`;
+}
+
+// Initialize
+async function init() {
+  await Promise.all([loadTemplates(), loadCPUModels(), loadNetworkTypes(), loadISOList(), loadUsers()]);
+  updatePreview();
+}
+
+async function loadTemplates() {
+  try {
+    const res = await fetch('/api/os-templates');
+    if (!res.ok) return;
+    osTemplates = await res.json();
+    
+    const grid = document.getElementById('templateGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = Object.entries(osTemplates).map(([key, tmpl]) => {
+      const iconUrl = tmpl.icon && tmpl.icon.startsWith('http') ? tmpl.icon : 'https://i.imgur.com/wu0Ob6B.png';
+      const iconHtml = `<img src="${iconUrl}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; padding:4px; background:rgba(99,102,241,0.05);" onerror="this.src='https://i.imgur.com/wu0Ob6B.png';" alt="${tmpl.name}">`;
+      return `
+      <label class="template-card">
+        <input type="radio" name="_template" value="${key}" onchange="selectTemplate('${key}')">
+        <div class="template-card-inner">
+          <div class="template-icon">${iconHtml}</div>
+          <div class="template-name">${tmpl.name}</div>
+          <div class="template-type">${tmpl.type}</div>
+        </div>
+      </label>`;
+    }).join('');
+    
+    const first = Object.keys(osTemplates)[0];
+    if (first) document.querySelector(`input[value="${first}"]`)?.click();
+  } catch(e) { console.log('Templates load error:', e); }
+}
+
+function selectTemplate(key) {
+  const tmpl = osTemplates[key];
+  if (!tmpl) return;
+  
+  document.getElementById('os_template').value = key;
+  document.getElementById('iso_file').value = '';
+  
+  const details = document.getElementById('templateDetails');
+  if (details) {
+    details.innerHTML = `
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div style="font-size: 12px; color: var(--text-muted);">Type:</div><div style="font-size: 12px; color: var(--text-primary); font-weight:500;">${tmpl.type}</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Default RAM:</div><div style="font-size: 12px; color: var(--text-primary); font-weight:500;">${tmpl.memory}MB</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Default CPUs:</div><div style="font-size: 12px; color: var(--text-primary); font-weight:500;">${tmpl.cpus} vCPUs</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Disk:</div><div style="font-size: 12px; color: var(--text-primary); font-weight:500;">${tmpl.disk_size}</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Username:</div><div style="font-size: 12px; color: var(--accent-primary); font-weight:600;">${tmpl.username}</div>
+      </div>`;
+  }
+  
+  if (document.getElementById('custom_memory').value === '2048' || !document.getElementById('custom_memory').value) {
+    document.getElementById('custom_memory').value = tmpl.memory;
+  }
+  updatePreview();
+}
+
+function handleIsoSelect() {
+  if (document.getElementById('iso_file').value) {
+    document.getElementById('os_template').value = '';
+    document.querySelectorAll('input[name="_template"]').forEach(r => r.checked = false);
+  }
+  updatePreview();
+}
+
+async function loadCPUModels() {
+  try {
+    const res = await fetch('/api/cpu-models');
+    if (!res.ok) return;
+    const models = await res.json();
+    const sel = document.getElementById('cpu_model');
+    if (!sel) return;
+    sel.innerHTML = Object.entries(models).map(([key, m]) =>
+      `<option value="${key}" ${key === 'host' ? 'selected' : ''}>${m.name} — ${m.description}</option>`
+    ).join('');
+  } catch(e) {}
+}
+
+async function loadNetworkTypes() {
+  try {
+    const res = await fetch('/api/network-types');
+    if (!res.ok) return;
+    const types = await res.json();
+    const grid = document.getElementById('networkTypeGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = Object.entries(types).map(([key, t], i) => `
+      <div>
+        <input type="radio" name="_network_type" id="net_${key}" value="${key}" ${i === 0 ? 'checked' : ''} onchange="selectNetwork('${key}')">
+        <label for="net_${key}" class="network-type-inner">
+          <div class="network-type-icon">${t.icon}</div>
+          <div class="network-type-name">${t.name}</div>
+          <div class="network-type-desc">${t.description}</div>
+        </label>
+      </div>`).join('');
+    
+    const firstKey = Object.keys(types)[0];
+    if (firstKey) selectNetwork(firstKey);
+  } catch(e) { console.error('Error loading network types:', e); }
+}
+
+function selectNetwork(key) {
+  document.getElementById('network_type').value = key;
+  const staticCard = document.getElementById('staticIpCard');
+  const ipv6Card = document.getElementById('ipv6Card');
+  if (staticCard) staticCard.style.display = (key === 'static_public' || key === 'static_private' || key === 'dual_stack') ? 'block' : 'none';
+  if (ipv6Card) ipv6Card.style.display = (key === 'dual_stack') ? 'block' : 'none';
+  updatePreview();
+}
+
+async function loadISOList() {
+  try {
+    const res = await fetch('/api/iso-list');
+    if (!res.ok) return;
+    const isos = await res.json();
+    const sel = document.getElementById('iso_file');
+    if (!sel) return;
+    if (isos.length === 0) {
+      sel.innerHTML = '<option value="">— No ISO files found —</option>';
+    } else {
+      sel.innerHTML = '<option value="">— Use OS Template —</option>' +
+        isos.map(iso => `<option value="${iso}">${iso}</option>`).join('');
+    }
+  } catch(e) {}
+}
+
+async function loadUsers() {
+  try {
+    const res = await fetch('/api/users/list');
+    if (!res.ok) return;
+    const users = await res.json();
+    const sel = document.getElementById('owner_id');
+    if (!sel) return;
+    if (users.length === 0) {
+      sel.innerHTML = '<option value="">— No users available —</option>';
+    } else {
+      sel.innerHTML = '<option value="">— Select User —</option>' +
+        users.map(user => `<option value="${user.id}">${user.username} (${user.email || 'N/A'})</option>`).join('');
+    }
+  } catch(e) { console.log('Error loading users:', e); }
+}
+
+function updateTotalCPU() {
+  const s = parseInt(document.getElementById('cpu_sockets')?.value) || 1;
+  const c = parseInt(document.getElementById('cpu_cores')?.value) || 1;
+  const t = parseInt(document.getElementById('cpu_threads')?.value) || 1;
+  const total = s * c * t;
+  const el = document.getElementById('totalCPUDisplay');
+  const hidden = document.getElementById('custom_cpus');
+  if (el) el.textContent = total;
+  if (hidden) hidden.value = total;
+  updatePreview();
+}
+
+function updateDiskSize() {
+  const num = document.getElementById('disk_size_num')?.value || '20';
+  const unit = document.getElementById('disk_size_unit')?.value || 'G';
+  const hidden = document.getElementById('disk_size');
+  if (hidden) hidden.value = num + unit;
+  updatePreview();
+}
+
+function toggleCustomCPUName() {
+  const checkbox = document.getElementById('enable_custom_cpu_name');
+  const section = document.getElementById('custom_cpu_name_section');
+  const input = document.getElementById('custom_cpu_name');
+  
+  if (checkbox.checked) {
+    section.style.display = 'block';
+    input.required = true;
+    setTimeout(() => input.focus(), 100);
+  } else {
+    section.style.display = 'none';
+    input.required = false;
+    input.value = '';
+    document.getElementById('cpuNameValid').style.opacity = '0';
+  }
+  updatePreview();
+}
+
+function validateCustomCPUName() {
+  const input = document.getElementById('custom_cpu_name');
+  const validIcon = document.getElementById('cpuNameValid');
+  const value = input.value.trim();
+  if (value.length > 0) {
+    validIcon.style.opacity = '1';
+    input.style.borderColor = '#10B981';
+  } else {
+    validIcon.style.opacity = '0';
+    input.style.borderColor = '';
+  }
+}
+
+function validateUsername() {
+  const input = document.getElementById('custom_username');
+  const hint = document.getElementById('usernameHint');
+  const value = input.value.trim();
+  
+  if (!value) {
+    hint.innerHTML = `<span style="color:#3B82F6;display:inline-flex;">${svg('i-info', 12)}</span> Leave empty to use template default. Can use "root" for root access.`;
+    hint.style.color = 'var(--text-muted)';
+    input.style.borderColor = '';
+    return;
+  }
+  
+  const isValid = /^[a-zA-Z0-9_-]+$/.test(value) && value.length >= 1 && value.length <= 32;
+  
+  if (value.toLowerCase() === 'root') {
+    hint.innerHTML = `<span style="color:#10B981;display:inline-flex;">${svg('i-check-circle', 12)}</span> Using <strong>root</strong> user - will have full system access.`;
+    hint.style.color = '#10B981';
+    input.style.borderColor = '#10B981';
+  } else if (isValid) {
+    hint.innerHTML = `<span style="color:#10B981;display:inline-flex;">${svg('i-check-circle', 12)}</span> Valid username. User will be created with sudo privileges.`;
+    hint.style.color = '#10B981';
+    input.style.borderColor = '#10B981';
+  } else {
+    hint.innerHTML = `<span style="color:#EF4444;display:inline-flex;">${svg('i-alert', 12)}</span> Invalid username. Use lowercase letters, numbers, hyphens, underscores (1-32 chars).`;
+    hint.style.color = '#EF4444';
+    input.style.borderColor = '#EF4444';
+  }
+}
+
+function toggleCustomManufacturer() {
+  const select = document.getElementById('smbios_manufacturer');
+  const input = document.getElementById('custom_manufacturer');
+  if (select.value === 'custom') {
+    input.style.display = 'block';
+    input.required = true;
+    setTimeout(() => input.focus(), 100);
+  } else {
+    input.style.display = 'none';
+    input.required = false;
+    input.value = '';
+  }
+  updatePreview();
+}
+
+function toggleCustomProduct() {
+  const select = document.getElementById('smbios_product');
+  const input = document.getElementById('custom_product');
+  if (select.value === 'custom') {
+    input.style.display = 'block';
+    input.required = true;
+    setTimeout(() => input.focus(), 100);
+  } else {
+    input.style.display = 'none';
+    input.required = false;
+    input.value = '';
+  }
+  updatePreview();
+}
+
+function setMem(val) {
+  const el = document.getElementById('custom_memory');
+  if (el) el.value = val;
+  updatePreview();
+}
+
+function genMAC() {
+  const mac = 'fa:16:3e:' + [0,1,2].map(() =>
+    Math.floor(Math.random()*256).toString(16).padStart(2,'0')
+  ).join(':');
+  const el = document.getElementById('mac_address');
+  if (el) el.value = mac;
+  showToast('MAC address generated', 'success');
+}
+
+function goToStep(step) {
+  for (let i = 1; i <= totalSteps; i++) {
+    const page = document.getElementById(`step-${i}`);
+    const indicator = document.getElementById(`step-${i}-indicator`);
+    if (page) page.style.display = i === step ? 'block' : 'none';
+    if (indicator) {
+      indicator.classList.remove('active', 'completed');
+      if (i === step) indicator.classList.add('active');
+      else if (i < step) indicator.classList.add('completed');
+    }
+    const conn = document.getElementById(`conn-${i}`);
+    if (conn) conn.classList.toggle('done', i < step);
+  }
+  currentStep = step;
+  document.getElementById('prevBtn').style.display = step === 1 ? 'none' : 'inline-flex';
+  document.getElementById('nextBtn').style.display = step === totalSteps ? 'none' : 'inline-flex';
+  if (step === totalSteps) buildReview();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() { if (!validateStep(currentStep)) return; if (currentStep < totalSteps) goToStep(currentStep + 1); }
+function prevStep() { if (currentStep > 1) goToStep(currentStep - 1); }
+
+function validateStep(step) {
+  if (step === 1) {
+    const name = document.getElementById('vm_name')?.value.trim();
+    if (!name) { showToast('VM Name is required', 'warning'); return false; }
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(name)) {
+      showToast('VM Name must be lowercase letters, numbers, and hyphens', 'warning');
+      return false;
+    }
+    const template = document.getElementById('os_template')?.value;
+    const iso = document.getElementById('iso_file')?.value;
+    if (!template && !iso) { showToast('Please select a template or ISO file', 'warning'); return false; }
+    return true;
+  }
+  if (step === 2) {
+    const mem = parseInt(document.getElementById('custom_memory')?.value);
+    if (!mem || mem < 512) { showToast('Minimum 512MB RAM required', 'warning'); return false; }
+    return true;
+  }
+  return true;
+}
+
+function buildReview() {
+  const data = collectFormData();
+  const el = document.getElementById('reviewContent');
+  const nameEl = document.getElementById('reviewVMName');
+  const osEl = document.getElementById('reviewVMOS');
+  
+  if (nameEl) nameEl.textContent = data.vm_name || '—';
+  if (osEl) osEl.textContent = data.os_template ? (osTemplates[data.os_template]?.name || data.os_template) : (data.iso_file || 'Custom');
+  
+  if (el) {
+    el.innerHTML = `
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color:#6366F1; margin-bottom: 10px; display:inline-flex; align-items:center; gap:6px;">${svg('i-server', 12)} System</div>
+          ${reviewRow('VM Name', data.vm_name)}
+          ${reviewRow('Hostname', data.hostname)}
+          ${reviewRow('OS Template', osTemplates[data.os_template]?.name || data.iso_file || '—')}
+          ${reviewRow('Username', data.custom_username)}
+          ${reviewRow('Owner', getOwnerName(data.owner_id))}
+        </div>
+        <div>
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color:#EC4899; margin-bottom: 10px; display:inline-flex; align-items:center; gap:6px;">${svg('i-cpu', 12)} Hardware</div>
+          ${reviewRow('vCPUs', data.custom_cpus + ' vCPUs')}
+          ${reviewRow('CPU Layout', data.cpu_sockets + 'S × ' + data.cpu_cores + 'C × ' + data.cpu_threads + 'T')}
+          ${reviewRow('CPU Model', data.cpu_model || 'host')}
+          ${reviewRow('Custom CPU', data.custom_cpu_name ? '<span style="color:#6366F1; font-weight:600;">' + data.custom_cpu_name + '</span>' : 'Default (host)')}
+          ${reviewRow('Memory', data.custom_memory + ' MB')}
+          ${reviewRow('Disk Size', data.disk_size)}
+        </div>
+        <div>
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color:#3B82F6; margin-bottom: 10px; display:inline-flex; align-items:center; gap:6px;">${svg('i-network', 12)} Network</div>
+          ${reviewRow('Network Type', data.network_type)}
+          ${reviewRow('SSH Port', data.ssh_port || 'Auto')}
+          ${reviewRow('HTTP Port', data.http_port || '80')}
+          ${reviewRow('IPv4 Address', data.ipv4_address || 'DHCP')}
+        </div>
+        <div>
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color:#F59E0B; margin-bottom: 10px; display:inline-flex; align-items:center; gap:6px;">${svg('i-tools', 12)} BIOS/Identity</div>
+          ${reviewRow('Manufacturer', data.smbios_manufacturer)}
+          ${reviewRow('Product', data.smbios_product)}
+          ${reviewRow('ACPI', data.enable_acpi ? 'Enabled' : 'Disabled')}
+        </div>
+      </div>`;
+  }
+}
+
+function reviewRow(label, value) {
+  return `
+    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); gap: 8px;">
+      <span style="font-size: 12px; color: var(--text-muted);">${label}</span>
+      <span style="font-size: 12px; color: var(--text-primary); font-weight: 500; text-align: right;">${value || '—'}</span>
+    </div>`;
+}
+
+function getOwnerName(ownerId) {
+  if (!ownerId) return '—';
+  const option = document.getElementById('owner_id')?.querySelector(`option[value="${ownerId}"]`);
+  return option?.textContent || '—';
+}
+
+function collectFormData() {
+  const form = document.getElementById('createVMForm');
+  const fd = new FormData(form);
+  const data = {};
+  fd.forEach((v, k) => { if (!k.startsWith('_')) data[k] = v; });
+  
+  const osTemplateInput = document.getElementById('os_template');
+  if (osTemplateInput && osTemplateInput.value) data.os_template = osTemplateInput.value;
+  
+  data.enable_kvm = 1;
+  data.enable_acpi = document.getElementById('enable_acpi')?.checked ? 1 : 0;
+  
+  const customCPUCheckbox = document.getElementById('enable_custom_cpu_name');
+  const customCPUInput = document.getElementById('custom_cpu_name');
+  if (customCPUCheckbox && customCPUCheckbox.checked && customCPUInput) {
+    const cpuName = customCPUInput.value.trim();
+    if (!cpuName) return null;
+    data.custom_cpu_name = cpuName;
+  } else {
+    data.custom_cpu_name = null;
+  }
+  
+  const manufacturerSelect = document.getElementById('smbios_manufacturer');
+  if (manufacturerSelect && manufacturerSelect.value === 'custom') {
+    const customManuf = document.getElementById('custom_manufacturer')?.value.trim();
+    if (customManuf) data.smbios_manufacturer = customManuf;
+  }
+  
+  const productSelect = document.getElementById('smbios_product');
+  if (productSelect && productSelect.value === 'custom') {
+    const customProd = document.getElementById('custom_product')?.value.trim();
+    if (customProd) data.smbios_product = customProd;
+  }
+  
+  return data;
+}
+
+async function submitCreate() {
+  const btn = document.getElementById('createBtn');
+  const alert = document.getElementById('createAlert');
+  const progress = document.getElementById('createProgress');
+  const progressBar = document.getElementById('createProgressBar');
+  const progressText = document.getElementById('createProgressText');
+  
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner spinner-sm" style="margin-right:8px;"></span> Creating...`;
+  
+  alert.style.display = 'none';
+  progress.style.display = 'block';
+  progressText.textContent = 'Initializing...';
+  progressBar.style.width = '10%';
+  
+  try {
+    const data = collectFormData();
+    if (data === null) throw new Error('Please fill in the custom CPU name field');
+    if (!data.os_template && !data.iso_file) throw new Error('Please select an OS template or ISO file');
+    
+    progressText.textContent = 'Creating VM...';
+    progressBar.style.width = '30%';
+    
+    const res = await fetch('/api/vms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    progressBar.style.width = '70%';
+    progressText.textContent = 'Configuring...';
+    
+    const result = await res.json();
+    
+    if (res.ok && result.success) {
+      progressBar.style.width = '100%';
+      progressBar.classList.add('green');
+      progressText.textContent = 'VM created successfully!';
+      
+      alert.className = 'alert alert-success';
+      alert.innerHTML = `<span class="alert-icon" style="color:#10B981; display:inline-flex;">${svg('i-check-circle', 16)}</span><span>VM "${data.vm_name}" created successfully! (ID: ${result.vm_id})</span>`;
+      alert.style.display = 'flex';
+      
+      btn.innerHTML = `${svg('i-check', 14)} VM Created!`;
+      showToast('VM created successfully!', 'success');
+      
+      setTimeout(() => { window.location.href = `/admin/vm/${result.vm_id}`; }, 1800);
+    } else {
+      throw new Error(result.error || 'VM creation failed');
+    }
+  } catch(e) {
+    progress.style.display = 'none';
+    alert.className = 'alert alert-error';
+    alert.innerHTML = `<span class="alert-icon" style="color:#EF4444; display:inline-flex;">${svg('i-x', 16)}</span><span>${escHtml(e.message)}</span>`;
+    alert.style.display = 'flex';
+    
+    btn.disabled = false;
+    btn.innerHTML = `${svg('i-refresh', 14)} Try Again`;
+    showToast('Failed: ' + e.message, 'error');
+  }
+}
+
+function updatePreview() {
+  const name = document.getElementById('vm_name')?.value || '—';
+  const template = document.getElementById('os_template')?.value;
+  const os = template ? (osTemplates[template]?.name || template) : (document.getElementById('iso_file')?.value || '—');
+  const mem = document.getElementById('custom_memory')?.value || '2048';
+  const cpus = document.getElementById('custom_cpus')?.value || '2';
+  const disk = document.getElementById('disk_size')?.value || '20G';
+  const net = document.getElementById('network_type')?.value || 'dhcp';
+  
+  // Update text preview
+  if (document.getElementById('prev_name')) document.getElementById('prev_name').textContent = name;
+  if (document.getElementById('prev_os')) document.getElementById('prev_os').textContent = os;
+  if (document.getElementById('prev_ram')) document.getElementById('prev_ram').textContent = mem + 'MB';
+  if (document.getElementById('prev_cpu')) document.getElementById('prev_cpu').textContent = cpus + ' vCPUs';
+  if (document.getElementById('prev_disk')) document.getElementById('prev_disk').textContent = disk;
+  if (document.getElementById('prev_net')) document.getElementById('prev_net').textContent = net;
+  
+  // Update OS logo in Ready to Deploy box
+  const osLogoBox = document.getElementById('osLogoBox');
+  if (osLogoBox && template && osTemplates[template]) {
+    const tmpl = osTemplates[template];
+    const iconUrl = tmpl.icon && tmpl.icon.startsWith('http') ? tmpl.icon : 'https://i.imgur.com/wu0Ob6B.png';
+    osLogoBox.innerHTML = `<img src="${iconUrl}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; padding: 4px; background: white;" onerror="this.src='https://i.imgur.com/wu0Ob6B.png';" alt="${tmpl.name}">`;
+  } else if (osLogoBox) {
+    osLogoBox.innerHTML = '<svg width="30" height="30" style="color: #6366F1;"><use href="#i-server"/></svg>';
+  }
+}
+
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function showToast(msg, type = 'info') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const iconMap = { success: 'i-check', error: 'i-x', warning: 'i-alert', info: 'i-info' };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="toast-icon">${svg(iconMap[type] || 'i-info', 16)}</span><span class="toast-message">${escHtml(msg)}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 4500);
+}
+
+document.getElementById('vm_name')?.addEventListener('input', updatePreview);
+document.getElementById('custom_memory')?.addEventListener('input', updatePreview);
+document.getElementById('disk_size_num')?.addEventListener('input', updateDiskSize);
+
+init();
+goToStep(1);
+</script>
+</body>
+</html>
