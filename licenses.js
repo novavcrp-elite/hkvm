@@ -414,11 +414,12 @@ async function initLicenseStorage(customDbPath = null, sharedDb = null) {
         try {
             await attemptLicenseRecovery();
         } catch (error) {
-            logger.error('[License] Deferred recovery error:', error.message);
+            logger.warn('[License] License server unreachable (non-critical): ' + error.message);
+            logger.info('[License] Panel will continue running without license verification');
         }
     }, 500); // 500ms delay
     
-    logger.info('[License] License storage initialized with auto-recovery enabled');
+    logger.info('[License] License storage initialized (panel runs regardless of license status)');
 }
 
 // ========== NEW FUNCTION: AUTO-RECOVERY ON RESTART ==========
@@ -436,49 +437,11 @@ async function attemptLicenseRecovery() {
             }
         }
         
-        // Try to decrypt stored key if available
-        if (!state.key_blob) {
-            logger.debug('[License] No stored license key found for recovery');
-            return;
-        }
-        
-        const decryptedKey = decryptKey(state.key_blob, state.machine_id);
-        if (!decryptedKey) {
-            logger.warn('[License] Could not decrypt stored license key');
-            return;
-        }
-        
-        logger.info('[License] Found encrypted license key - attempting auto-recovery...');
-        
-        try {
-            // Attempt to revalidate with server using recovered key
-            const result = await revalidateWithServer();
-            
-            if (result.success) {
-                logger.info('[License] ✓ AUTO-RECOVERY SUCCESS: License revalidated with recovered key');
-                return;
-            }
-            
-            // Server revalidation failed, try activation endpoint as fallback
-            logger.warn('[License] Server revalidation failed, attempting activation...');
-            const activationResult = await activateWithServer(decryptedKey, 'auto-recovery');
-            
-            if (activationResult.success) {
-                logger.info('[License] ✓ AUTO-RECOVERY SUCCESS: License re-activated with recovered key');
-                return;
-            }
-            
-            logger.warn('[License] Auto-recovery failed:', activationResult.message);
-        } catch (error) {
-            logger.error('[License] Auto-recovery error:', error.message);
-        }
+        // Panel runs regardless - license check is non-critical
+        logger.info('[License] License server check skipped - panel running in free mode');
     } catch (dbError) {
         // Handle database lock or other database errors gracefully
-        if (dbError.message && dbError.message.includes('SQLITE_BUSY')) {
-            logger.warn('[License] Database busy during recovery, will retry on next startup');
-        } else {
-            logger.error('[License] Recovery init error:', dbError.message);
-        }
+        logger.info('[License] Panel running in free mode (license check skipped)');
     }
 }
 
