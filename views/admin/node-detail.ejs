@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Node Details - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+  <%- include('../partials/admin/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content" id="pageContent">
+      <div style="text-align:center;padding:80px;"><div class="spinner spinner-lg" style="margin:0 auto 16px;"></div></div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+<script>
+const nodeId=<%= nodeId %>;
+function svg(id,s=14){return `<svg width="${s}" height="${s}"><use href="#${id}"/></svg>`;}
+async function loadPage(){
+  try{
+    const[nodeRes,healthRes]=await Promise.all([fetch(`/api/nodes/${nodeId}`),fetch(`/api/nodes/${nodeId}/health`).catch(()=>null)]);
+    const node=await nodeRes.json();
+    const health=healthRes&&healthRes.ok?await healthRes.json():null;
+    renderPage(node,health);
+  }catch(e){document.getElementById('pageContent').innerHTML=`<div class="empty-state"><div class="empty-state-title">Node Not Found</div><a href="/admin/nodes" class="btn btn-primary">Back to Nodes</a></div>`;}
+}
+function renderPage(node,health){
+  const h=health||{};
+  document.getElementById('pageContent').innerHTML=`
+    <div class="page-header"><div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin/nodes" style="color:var(--text-muted);text-decoration:none;font-size:13px;">${svg('i-back',14)} Back</a>
+      <h1 class="page-title">${svg('i-server',18)} ${node.name}</h1>
+      <span class="badge ${node.status==='online'?'badge-running':'badge-stopped'}"><span class="dot"></span> ${node.status||'unknown'}</span>
+    </div></div>
+    <div class="stats-grid" style="margin-bottom:20px;">
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">${h.cpu_pct||0}%</div><div style="font-size:11px;color:var(--text-muted);">CPU (${h.cpu_cores||0} cores)</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">${h.memory_pct||0}%</div><div style="font-size:11px;color:var(--text-muted);">RAM (${((h.memory_used||0)/1073741824).toFixed(1)}/${((h.memory_total||0)/1073741824).toFixed(1)} GB)</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">${h.disk_pct||0}%</div><div style="font-size:11px;color:var(--text-muted);">Storage (${((h.disk_used||0)/1073741824).toFixed(1)}/${((h.disk_total||0)/1073741824).toFixed(1)} GB)</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">${h.running_vms||0} / ${h.total_vms||0}</div><div style="font-size:11px;color:var(--text-muted);">VMs (Running/Total)</div></div>
+    </div>
+    <div class="stats-grid" style="margin-bottom:20px;">
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">${h.running_cts||0} / ${h.total_cts||0}</div><div style="font-size:11px;color:var(--text-muted);">LXC (Running/Total)</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">${node.location||'N/A'}</div><div style="font-size:11px;color:var(--text-muted);">Location</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">${node.api_type||'proxmox'}</div><div style="font-size:11px;color:var(--text-muted);">Type</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;color:var(--text-primary);">P${node.priority||5}</div><div style="font-size:11px;color:var(--text-muted);">Priority</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="btn btn-primary" onclick="testConnection()">Test Connection</button>
+      <button class="btn btn-warning" onclick="toggleNode(${node.enabled?0:1})">${node.enabled?'Disable':'Enable'} Node</button>
+      <button class="btn btn-danger" onclick="deleteNode()">Delete Node</button>
+    </div>`;
+}
+async function testConnection(){try{const r=await fetch(`/api/nodes/${nodeId}/test`,{method:'POST'});const d=await r.json();showToast(d.success?`Connected! v${d.version}`:d.error,d.success?'success':'error');}catch(e){showToast(e.message,'error');}}
+async function toggleNode(enabled){try{await fetch(`/api/nodes/${nodeId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled})});showToast(enabled?'Node enabled':'Node disabled','success');loadPage();}catch(e){showToast(e.message,'error');}}
+async function deleteNode(){if(!confirm('Delete this node? It must have no active resources.'))return;try{await fetch(`/api/nodes/${nodeId}`,{method:'DELETE'});showToast('Node deleted','success');window.location.href='/admin/nodes';}catch(e){showToast(e.message,'error');}}
+loadPage();
+</script>
+</body>
+</html>
