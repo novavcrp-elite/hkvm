@@ -96,7 +96,34 @@ if [ -s "$TMP_FILE" ] && tar -tzf "$TMP_FILE" &>/dev/null 2>&1; then
     EXTRACTED=$(find /tmp -maxdepth 1 -name "*hkvm*" -type d | head -1)
 
     if [ -n "$EXTRACTED" ]; then
-        cp -r "$EXTRACTED"/* "$INSTALL_DIR/" 2>/dev/null
+        # Update self (setup.sh and install.sh)
+        cp "$EXTRACTED/setup.sh" "$INSTALL_DIR/setup.sh" 2>/dev/null
+        cp "$EXTRACTED/install.sh" "$INSTALL_DIR/install.sh" 2>/dev/null
+        chmod +x "$INSTALL_DIR/setup.sh" "$INSTALL_DIR/install.sh" 2>/dev/null
+
+        # Update all JS source files
+        for f in app.js lxc.js local-lxd.js nodes.js proxmox-api.js discord-bot.js discord-routes.js ip-allocation.js audit-log.js licenses.js tmate-routes.js novnc-routes.js package.json package-lock.json .env.example .gitignore; do
+            [ -f "$EXTRACTED/$f" ] && cp "$EXTRACTED/$f" "$INSTALL_DIR/$f" 2>/dev/null
+        done
+
+        # Update ALL views (force overwrite)
+        [ -d "$EXTRACTED/views" ] && cp -rf "$EXTRACTED/views"/* "$INSTALL_DIR/views/" 2>/dev/null
+        echo -e "  ${GREEN}✓${NC} Views updated"
+
+        # Update ALL public files (including noVNC)
+        [ -d "$EXTRACTED/public" ] && cp -rf "$EXTRACTED/public"/* "$INSTALL_DIR/public/" 2>/dev/null
+        echo -e "  ${GREEN}✓${NC} Public files updated"
+
+        # Verify new files exist
+        MISSING=0
+        for f in views/users/settings-discord.ejs views/users/settings-logs.ejs views/users/lxc-create.ejs views/partials/users/sidebar.ejs public/novnc/core/rfb.js; do
+            if [ ! -f "$INSTALL_DIR/$f" ]; then
+                echo -e "  ${YELLOW}⚠${NC} Missing: $f"
+                MISSING=$((MISSING+1))
+            fi
+        done
+        [ $MISSING -eq 0 ] && echo -e "  ${GREEN}✓${NC} All new files verified"
+
         rm -rf "$EXTRACTED"
     else
         tar -xzf "$TMP_FILE" -C "$INSTALL_DIR" --strip-components=1 2>/dev/null
