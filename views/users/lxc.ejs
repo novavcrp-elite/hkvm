@@ -499,6 +499,9 @@ function renderLXCCard(c) {
         <a href="/lxc/${c.id}" class="btn-action" style="color: #F59E0B;">
           <svg class="icon"><use href="#i-key"/></svg> tmate
         </a>
+        <button class="btn-action" style="color: #EF4444;" onclick="lxcAction('delete', ${c.id}, '${escHtml(c.name)}')">
+          <svg class="icon"><use href="#i-trash"/></svg> Delete
+        </button>
       </div>
     </div>
   `;
@@ -594,6 +597,9 @@ function renderListView(containers, container) {
                     <a href="/lxc/${c.id}" class="btn-icon-only" title="Console">
                       <svg class="icon"><use href="#i-terminal"/></svg>
                     </a>
+                    <button class="btn-icon-only" style="color:#EF4444;" onclick="lxcAction('delete', ${c.id}, '${escHtml(c.name)}')" title="Delete">
+                      <svg class="icon"><use href="#i-trash"/></svg>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -621,6 +627,27 @@ function animateNumber(id, target) {
 }
 
 async function lxcAction(action, id, name) {
+  if (action === 'delete') {
+    const confirmed = await confirmAction(
+      `Permanently delete container "${name}" (ID: ${id})? This cannot be undone!`,
+      'Delete LXC Container', 'danger'
+    );
+    if (!confirmed) return;
+    try {
+      showToast('Deleting container...', 'warning');
+      const res = await fetch(`/api/lxc/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Container deleted', 'success');
+        setTimeout(loadLXC, 1000);
+      } else {
+        showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+      }
+    } catch(e) {
+      showToast('Action failed: ' + e.message, 'error');
+    }
+    return;
+  }
   const msgs = {
     start: `Start container "${name}"?`,
     stop: `Stop container "${name}"? Running processes will be interrupted.`,

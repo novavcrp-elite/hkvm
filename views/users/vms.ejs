@@ -1064,6 +1064,9 @@ function renderVMCard(vm) {
         <a href="/vm/${vm.vm_id}/novnc" class="btn-action" style="color: #06B6D4;">
           <svg class="icon"><use href="#i-camera"/></svg> Web
         </a>
+        <button class="btn-action" style="color: #EF4444;" onclick="vmAction('delete', ${vm.vm_id}, '${escHtml(vm.vm_name)}')">
+          <svg class="icon"><use href="#i-trash"/></svg> Delete
+        </button>
       </div>
     </div>
   `;
@@ -1183,6 +1186,27 @@ function animateNumber(id, target) {
 }
 
 async function vmAction(action, vmId, vmName) {
+  if (action === 'delete') {
+    const confirmed = await confirmAction(
+      `Permanently delete VM "${vmName}" (ID: ${vmId})? All files will be removed. This cannot be undone!`,
+      'Delete Virtual Machine', 'danger'
+    );
+    if (!confirmed) return;
+    try {
+      showToast('Deleting VM...', 'warning');
+      const res = await fetch(`/api/vms/${vmId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('VM deleted', 'success');
+        setTimeout(loadVMs, 1000);
+      } else {
+        showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+      }
+    } catch(e) {
+      showToast('Action failed: ' + e.message, 'error');
+    }
+    return;
+  }
   const msgs = {
     start: `Start VM "${vmName}"?`,
     stop: `Stop VM "${vmName}"? Running processes will be interrupted.`,

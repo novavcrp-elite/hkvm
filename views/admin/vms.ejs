@@ -387,6 +387,7 @@ function renderVMCard(vm) {
         <a href="/admin/vm/${vm.vm_id}" class="btn btn-outline btn-sm"><svg width="12" height="12"><use href="#i-info"/></svg> Details</a>
         <a href="/vm/${vm.vm_id}/tmate" class="btn btn-ghost btn-sm" style="color: #8B5CF6;"><svg width="12" height="12"><use href="#i-link"/></svg> tmate</a>
         <a href="/vm/${vm.vm_id}/novnc" class="btn btn-ghost btn-sm" style="color: #06B6D4;"><svg width="12" height="12"><use href="#i-camera"/></svg> noVNC</a>
+        <button class="btn btn-ghost btn-sm" style="color: #EF4444;" onclick="vmAction('delete', ${vm.vm_id}, '${escHtml(vm.vm_name)}')"><svg width="12" height="12"><use href="#i-trash"/></svg> Delete</button>
       </div>
     </div>
   `;
@@ -463,6 +464,8 @@ function renderListView(vms, container) {
                     <a href="/admin/vm/${vm.vm_id}/edit" class="btn btn-primary btn-sm btn-icon" title="Edit"><svg width="13" height="13"><use href="#i-edit"/></svg></a>
                     <a href="/admin/vm/${vm.vm_id}" class="btn btn-outline btn-sm btn-icon" title="Details"><svg width="13" height="13"><use href="#i-info"/></svg></a>
                     <a href="/admin/vm/${vm.vm_id}/console" class="btn btn-ghost btn-sm btn-icon" title="Console"><svg width="13" height="13"><use href="#i-terminal"/></svg></a>
+                    <a href="/vm/${vm.vm_id}/tmate" class="btn btn-ghost btn-sm btn-icon" title="tmate" style="color:#8B5CF6;"><svg width="13" height="13"><use href="#i-link"/></svg></a>
+                    <a href="/vm/${vm.vm_id}/novnc" class="btn btn-ghost btn-sm btn-icon" title="NoVNC" style="color:#06B6D4;"><svg width="13" height="13"><use href="#i-camera"/></svg></a>
                     <button class="btn btn-danger btn-sm btn-icon" onclick="confirmDelete(${vm.vm_id}, '${escHtml(vm.vm_name)}')" title="Delete"><svg width="13" height="13"><use href="#i-trash"/></svg></button>
                   </div>
                 </td>
@@ -477,6 +480,27 @@ function renderListView(vms, container) {
 
 // VM Actions
 async function vmAction(action, vmId, vmName) {
+  if (action === 'delete') {
+    const confirmed = await confirmAction(
+      `Permanently delete VM "${vmName}" (ID: ${vmId})? All files will be removed. This cannot be undone!`,
+      'Delete Virtual Machine', 'danger'
+    );
+    if (!confirmed) return;
+    try {
+      showToast('Deleting VM...', 'warning');
+      const res = await fetch(`/api/vms/${vmId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('VM deleted', 'success');
+        setTimeout(loadVMs, 1000);
+      } else {
+        showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+      }
+    } catch(e) {
+      showToast('Action failed: ' + e.message, 'error');
+    }
+    return;
+  }
   const msgs = {
     start: `Start VM "${vmName}"?`,
     stop: `Stop VM "${vmName}"? Running processes will be interrupted.`,
