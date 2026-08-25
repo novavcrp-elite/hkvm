@@ -4,14 +4,50 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title || 'LXC Container - HKVM Panel' %></title>
   <link rel="icon" href="<%= siteLogo %>" type="image/png"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .tabs{display:flex;gap:0;border-bottom:1px solid var(--border-subtle);overflow-x:auto}
+    .tab-btn{padding:12px 18px;border:none;background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+    .tab-btn:hover{color:var(--text-primary);background:rgba(99,102,241,0.04)}
+    .tab-btn.active{color:var(--accent-primary);border-bottom-color:var(--accent-primary)}
+    .tab-pane{display:none;padding:20px 0}
+    .tab-pane.active{display:block}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-subtle)}
+    .info-row:last-child{border-bottom:none}
+    .info-label{font-size:12px;color:var(--text-muted);font-weight:500}
+    .info-value{font-size:13px;color:var(--text-primary);font-weight:600;text-align:right;max-width:60%;word-break:break-all}
+    .code-block{background:rgba(0,0,0,0.3);border:1px solid var(--border-subtle);border-radius:8px;padding:12px 14px;font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:#10B981;overflow-x:auto}
+    .stat-card{padding:16px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border-card)}
+  </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-4h14v4"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  </defs>
+</svg>
 <div class="admin-wrapper">
   <%- include('../partials/users/sidebar') %>
   <div class="admin-main">
     <%- include('../partials/admin/header') %>
     <div class="admin-content" id="pageContent">
-      <div style="text-align:center;padding:80px;"><div class="spinner spinner-lg" style="margin:0 auto 16px;"></div></div>
+      <div style="text-align:center;padding:80px;"><div class="spinner spinner-lg" style="margin:0 auto 16px;"></div><div style="color:var(--text-muted);">Loading container details...</div></div>
     </div>
     <%- include('../partials/admin/footer') %>
   </div>
@@ -19,10 +55,18 @@
 <!-- tmate Modal -->
 <div class="modal-overlay" id="tmateModal"><div class="modal"><div class="modal-header"><div class="modal-title">tmate SSH Access</div><button class="modal-close" onclick="closeModal('tmateModal')">✕</button></div>
   <div class="modal-body" id="tmateBody"><div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto 12px;"></div>Generating tmate session...</div></div></div></div>
+
 <script>
 const cid=<%= containerId %>;
 function svg(id,s=14){return `<svg width="${s}" height="${s}"><use href="#${id}"/></svg>`;}
+function escHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function closeModal(id){document.getElementById(id).classList.remove('show');document.body.style.overflow='';}
+function infoRow(label,value,monospace=false,highlight=false){
+  const valStyle = monospace ? 'font-family:monospace;font-size:12px;' : (highlight ? 'color:#10B981;' : '');
+  return `<div class="info-row"><div class="info-label">${label}</div><div class="info-value" style="${valStyle}">${value||'N/A'}</div></div>`;
+}
+function formatMem(mb){return mb>=1024?(mb/1024).toFixed(1)+' GB':mb+' MB';}
+
 async function loadPage(){
   try{
     const res=await fetch(`/api/lxc/${cid}`);
@@ -31,76 +75,226 @@ async function loadPage(){
     renderPage(c);
   }catch(e){document.getElementById('pageContent').innerHTML=`<div class="empty-state"><div class="empty-state-title">Container Not Found</div><a href="/lxc" class="btn btn-primary">Back to Containers</a></div>`;}
 }
+
 function renderPage(c){
+  const statusCls = c.status==='running'?'badge-running':c.status==='error'?'badge-error':'badge-stopped';
+  const isRunning = c.status==='running';
   const icon = c.template_icon;
   const displayIcon = (icon && icon.startsWith('http')) ? icon : null;
-  const osEmojiMap = { ubuntu: '🐧', debian: '🐧', alpine: '🏔️', centos: '🔷', fedora: '🎩' };
-  const osEmoji = osEmojiMap[(c.os_type || '').toLowerCase()] || '📦';
+  const osEmojiMap = {ubuntu:'🐧',debian:'🐧',alpine:'🏔️',centos:'🔷',fedora:'🎩'};
+  const osEmoji = osEmojiMap[(c.os_type||'').toLowerCase()] || '📦';
   const iconHtml = displayIcon ? `<img src="${displayIcon}" alt="OS" style="width:40px;height:40px;object-fit:contain;border-radius:10px;padding:6px;background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06));border:1px solid rgba(99,102,241,0.2);" onerror="this.src='https://i.imgur.com/wu0Ob6B.png'">` : `<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:10px;background:rgba(99,102,241,0.1);">${osEmoji}</div>`;
 
   document.getElementById('pageContent').innerHTML=`
-    <div class="page-header"><div style="display:flex;align-items:center;gap:14px;">
-      <a href="/lxc" style="color:var(--text-muted);text-decoration:none;font-size:13px;">${svg('i-back',14)} Back</a>
-      <div style="display:flex;align-items:center;gap:12px;">${iconHtml}
-        <div><h1 class="page-title">${c.name}</h1>
-          <p style="font-size:12px;color:var(--text-muted);">LXC • ${c.node_name||'N/A'} • #${c.id}</p></div>
+    <div class="page-header" style="align-items:center;">
+      <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;">
+        <a href="/lxc" style="color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:13px;flex-shrink:0;">${svg('i-back',14)} Back</a>
+        <div style="min-width:0;flex:1;display:flex;align-items:center;gap:12px;">
+          ${iconHtml}
+          <div style="min-width:0;flex:1;">
+            <h1 class="page-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;">${escHtml(c.name)}</h1>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="background:rgba(99,102,241,0.1);color:#6366F1;padding:2px 8px;border-radius:5px;font-family:monospace;font-weight:600;">#${c.id}</span>
+              <span>${escHtml(c.template_display_name||c.os_type||c.template_key||'LXC')}</span>
+              <span style="opacity:0.6;">·</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;">${svg('i-server',11)} ${c.node_name||'Local LXD'}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="page-actions" style="align-items:center;">
+        <span class="badge ${statusCls}" style="padding:5px 12px;font-size:12px;"><span class="dot"></span> ${c.status.toUpperCase()}</span>
+        ${isRunning
+          ? `<button class="btn btn-warning btn-sm" onclick="lxcAction('stop')">${svg('i-stop',12)} Stop</button>
+             <button class="btn btn-ghost btn-sm" onclick="lxcAction('restart')">${svg('i-restart',12)} Restart</button>`
+          : `<button class="btn btn-success btn-sm" onclick="lxcAction('start')">${svg('i-play',12)} Start</button>`
+        }
+        <button class="btn btn-outline btn-sm" onclick="showTmate()" style="color:#8B5CF6;border-color:rgba(139,92,246,0.3);">${svg('i-link',13)} tmate SSH</button>
       </div>
     </div>
-      <div class="page-actions">
-        <span class="badge ${c.status==='running'?'badge-running':'badge-stopped'}"><span class="dot"></span> ${c.status.toUpperCase()}</span>
-        ${c.status==='running'?`
-          <button class="btn btn-warning btn-sm" onclick="action('stop')">Stop</button>
-          <button class="btn btn-ghost btn-sm" onclick="action('restart')">Restart</button>
-          <button class="btn btn-ghost btn-sm" onclick="action('shutdown')">Shutdown</button>
-          <button class="btn btn-ghost btn-sm" onclick="action('reboot')">Reboot</button>
-        `:`<button class="btn btn-success btn-sm" onclick="action('start')">Start</button>`}
-        <button class="btn btn-outline btn-sm" onclick="showTmate()">tmate SSH</button>
-      </div>
-    </div>
+
+    <!-- Stats Row -->
     <div class="stats-grid" style="margin-bottom:20px;">
-      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${c.cpu_cores}</div><div style="font-size:11px;color:var(--text-muted);">CPU Cores</div></div>
-      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${(c.memory/1024).toFixed(1)} GB</div><div style="font-size:11px;color:var(--text-muted);">RAM</div></div>
-      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${c.disk_size}</div><div style="font-size:11px;color:var(--text-muted);">Disk</div></div>
-      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${c.ipv4_address||'DHCP'}</div><div style="font-size:11px;color:var(--text-muted);">IPv4</div></div>
+      <div class="stat-card" style="padding:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(236,72,153,0.12);color:#EC4899;display:flex;align-items:center;justify-content:center;">${svg('i-cpu',20)}</div>
+        </div>
+        <div style="font-size:24px;font-weight:800;color:var(--text-primary);">${c.cpu_cores||'—'}</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">CPU Cores</div>
+      </div>
+      <div class="stat-card" style="padding:16px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(16,185,129,0.12);color:#10B981;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">${svg('i-mem',20)}</div>
+        <div style="font-size:24px;font-weight:800;color:var(--text-primary);">${formatMem(c.memory)}</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">RAM</div>
+      </div>
+      <div class="stat-card" style="padding:16px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(6,182,212,0.12);color:#06B6D4;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">${svg('i-disc',20)}</div>
+        <div style="font-size:24px;font-weight:800;color:var(--text-primary);">${c.disk_size||'—'}</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Storage</div>
+      </div>
+      <div class="stat-card" style="padding:16px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,130,246,0.12);color:#3B82F6;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">${svg('i-globe',20)}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);word-break:break-all;">${c.ipv4_address||'DHCP'}</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">IPv4</div>
+      </div>
     </div>
-    <div class="card"><div class="card-header"><div style="font-weight:700;font-size:14px;">Details</div></div>
-      <div class="card-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        ${infoRow('Name',c.name)}${infoRow('Hostname',c.hostname)}${infoRow('OS/Template',c.os_type||c.template_key||'N/A')}
-        ${infoRow('Node',c.node_name||'N/A')}${infoRow('Username',c.username)}${infoRow('SSH Port',c.ssh_port)}
-        ${infoRow('Network',c.network_type)}${infoRow('Bridge',c.bridge)}${infoRow('Swap',(c.swap/1024).toFixed(1)+' GB')}
-        ${infoRow('Unprivileged',c.unprivileged?'Yes':'No')}${infoRow('Created',c.created_at?new Date(c.created_at).toLocaleString():'N/A')}
-      </div></div>
+
+    <!-- Detail Tabs -->
+    <div class="card">
+      <div class="card-header" style="padding-bottom:0;border-bottom:none;">
+        <div class="tabs" style="margin-bottom:0;border-bottom:1px solid var(--border-subtle);width:100%;">
+          <button class="tab-btn active" onclick="switchTab('overview')" data-tab="overview">${svg('i-server',13)} Overview</button>
+          <button class="tab-btn" onclick="switchTab('network')" data-tab="network">${svg('i-globe',13)} Network</button>
+          <button class="tab-btn" onclick="switchTab('config')" data-tab="config">${svg('i-cpu',13)} Config</button>
+          <button class="tab-btn" onclick="switchTab('logs')" data-tab="logs">${svg('i-scroll',13)} Logs</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Overview Tab -->
+        <div class="tab-pane active" id="tab-overview">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6366F1;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;">${svg('i-server',12)} System Information</div>
+              ${infoRow('Name',c.name)}
+              ${infoRow('Container ID','#'+c.id)}
+              ${infoRow('OS/Template',c.template_display_name||c.os_type||c.template_key||'N/A')}
+              ${infoRow('Hostname',c.hostname)}
+              ${infoRow('Node',c.node_name||'Local LXD')}
+              ${infoRow('Description',c.description||'—')}
+              ${infoRow('Created',c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—')}
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#10B981;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;">${svg('i-shield',12)} Access Information</div>
+              ${infoRow('Username',c.username||'root')}
+              ${infoRow('SSH Port',c.ssh_port||'22')}
+              ${infoRow('Network Type',c.network_type||'DHCP')}
+              ${infoRow('Bridge',c.bridge||'lxdbr0')}
+              ${infoRow('Unprivileged',c.unprivileged?'Yes':'No')}
+              ${infoRow('Nesting',c.nesting?'Yes':'No')}
+            </div>
+          </div>
+          <div style="margin-top:20px;padding:16px;background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.03));border:1px solid rgba(99,102,241,0.2);border-radius:var(--radius-md);">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.8px;display:inline-flex;align-items:center;gap:6px;">
+              <span style="color:#6366F1;">${svg('i-terminal',12)}</span> Quick SSH Connect
+            </div>
+            <div class="code-block" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <span id="sshCmd">ssh ${escHtml(c.username||'root')}@${escHtml(c.ipv4_address||'CONTAINER_IP')} -p ${c.ssh_port||22}</span>
+              <button class="btn btn-ghost btn-sm" onclick="copySSH()">${svg('i-copy',12)} Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Network Tab -->
+        <div class="tab-pane" id="tab-network">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#3B82F6;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;">${svg('i-globe',12)} IPv4 Configuration</div>
+              ${infoRow('Type',c.network_type||'DHCP')}
+              ${infoRow('IPv4 Address',c.ipv4_address||'DHCP Auto')}
+              ${infoRow('Gateway',c.gateway||'—')}
+              ${infoRow('Netmask',c.netmask||'24')}
+              ${infoRow('DNS',c.dns_servers||'8.8.8.8, 8.8.4.4')}
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#06B6D4;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;">${svg('i-network',12)} Additional Network</div>
+              ${infoRow('IPv6 Address',c.ipv6_address||'Not configured')}
+              ${infoRow('Bridge',c.bridge||'lxdbr0')}
+              ${infoRow('VLAN ID',c.vlan_id||'None')}
+              ${infoRow('SSH Port',c.ssh_port||'22')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Config Tab -->
+        <div class="tab-pane" id="tab-config">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#EC4899;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;">${svg('i-cpu',12)} Resources</div>
+              ${infoRow('CPU Cores',c.cpu_cores||'—')}
+              ${infoRow('Memory',formatMem(c.memory))}
+              ${infoRow('Swap',formatMem(c.swap))}
+              ${infoRow('Disk Size',c.disk_size||'—')}
+              ${infoRow('Disk Used',c.disk_used?(c.disk_used+' GB'):'—')}
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#F59E0B;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;">${svg('i-shield',12)} Security & Features</div>
+              ${infoRow('Unprivileged',c.unprivileged?'Yes':'No')}
+              ${infoRow('Nesting',c.nesting?'Yes':'No')}
+              ${infoRow('Container ID (LXD)',c.container_id||'—')}
+              ${infoRow('Template Key',c.template_key||'—')}
+              ${infoRow('Last Activity',c.last_activity?new Date(c.last_activity).toLocaleString():'—')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div class="tab-pane" id="tab-logs">
+          <div id="logsList" style="font-family:monospace;font-size:12px;color:var(--text-muted);padding:10px;">Loading logs...</div>
+        </div>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn btn-danger" onclick="deleteContainer()">Delete Container</button>
-    </div>`;
+
+    <!-- Danger Zone -->
+    <div style="margin-top:20px;padding:16px 20px;border:1px solid rgba(239,68,68,0.3);border-radius:12px;background:rgba(239,68,68,0.04);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#EF4444;display:flex;align-items:center;gap:6px;">${svg('i-alert',16)} Danger Zone</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Permanently delete this container and all its data.</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteContainer()">${svg('i-trash',12)} Delete Container</button>
+      </div>
+    </div>
+  `;
 }
-function infoRow(label,value){return `<div style="font-size:13px;"><span style="color:var(--text-muted);">${label}:</span> <strong>${value||'N/A'}</strong></div>`;}
-async function action(act){
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);});
+  document.querySelectorAll('.tab-pane').forEach(p=>{p.classList.toggle('active',p.id==='tab-'+tab);});
+  if(tab==='logs')loadLogs();
+}
+
+async function lxcAction(act){
   try{const r=await fetch(`/api/lxc/${cid}/${act}`,{method:'POST'});const d=await r.json();if(!r.ok)throw new Error(d.error);showToast(d.message||'Success','success');setTimeout(loadPage,1500);}catch(e){showToast(e.message,'error');}
 }
+
+async function loadLogs(){
+  const el=document.getElementById('logsList');
+  if(!el)return;
+  try{const r=await fetch(`/api/lxc/${cid}/logs`);const logs=await r.json();
+    if(Array.isArray(logs)&&logs.length>0){
+      el.innerHTML=logs.map(l=>`<div style="padding:6px 0;border-bottom:1px solid var(--border-subtle);"><span style="color:#6366F1;">[${l.timestamp}]</span> <span style="color:${l.status==='success'?'#10B981':l.status==='failed'?'#EF4444':'#F59E0B'};">${l.action}</span> ${escHtml(l.message||'')}</div>`).join('');
+    }else{el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);">No logs available</div>';}
+  }catch(e){el.innerHTML='<div style="color:#EF4444;">Failed to load logs</div>';}
+}
+
+function copySSH(){navigator.clipboard.writeText(document.getElementById('sshCmd').textContent);showToast('Copied!','success');}
+
 async function showTmate(){
   document.getElementById('tmateModal').classList.add('show');
   document.getElementById('tmateBody').innerHTML='<div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto 12px;"></div>Generating tmate session...</div>';
-  try{
-    const r=await fetch(`/api/lxc/${cid}/tmate`,{method:'POST'});const d=await r.json();
+  try{const r=await fetch(`/api/lxc/${cid}/tmate`,{method:'POST'});const d=await r.json();
     if(!r.ok)throw new Error(d.error);
     document.getElementById('tmateBody').innerHTML=`
       <div style="margin-bottom:16px;"><span class="badge badge-running"><span class="dot"></span> Active</span></div>
       <div style="margin-bottom:12px;"><div style="font-size:11px;text-transform:uppercase;color:var(--accent-primary);margin-bottom:6px;">SSH Command</div>
-        <div class="code-block" style="display:flex;align-items:center;justify-content:space-between;padding:10px;font-family:monospace;">
+        <div class="code-block" style="display:flex;align-items:center;justify-content:space-between;padding:10px;">
           <code style="word-break:break-all;font-size:12px;color:var(--accent-green);">${d.sshCommand||'N/A'}</code>
           <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${(d.sshCommand||'').replace(/'/g,"\\'")}');showToast('Copied!','success')">Copy</button>
         </div></div>
       ${d.readonlyCommand?`<div style="margin-bottom:12px;"><div style="font-size:11px;text-transform:uppercase;color:#F59E0B;margin-bottom:6px;">Read-Only</div>
-        <div class="code-block" style="display:flex;align-items:center;justify-content:space-between;padding:10px;font-family:monospace;">
+        <div class="code-block" style="display:flex;align-items:center;justify-content:space-between;padding:10px;">
           <code style="word-break:break-all;font-size:12px;">${d.readonlyCommand}</code>
           <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${(d.readonlyCommand||'').replace(/'/g,"\\'")}');showToast('Copied!','success')">Copy</button>
         </div></div>`:''}
-      <div style="font-size:12px;color:var(--text-muted);">Expires in: ${Math.floor(d.expires_in/60)} minutes</div>`;
+      <div style="font-size:12px;color:var(--text-muted);">Expires in: ${Math.floor((d.expires_in||0)/60)} minutes</div>`;
   }catch(e){document.getElementById('tmateBody').innerHTML=`<div style="text-align:center;padding:20px;color:#EF4444;">${e.message}</div>`;}
 }
-async function deleteContainer(){if(!confirm('Delete this container permanently?'))return;try{await fetch(`/api/lxc/${cid}`,{method:'DELETE'});showToast('Container deleted','success');window.location.href='/lxc';}catch(e){showToast(e.message,'error');}}
+
+async function deleteContainer(){
+  if(!confirm('Delete this container permanently? This cannot be undone!'))return;
+  try{await fetch(`/api/lxc/${cid}`,{method:'DELETE'});showToast('Container deleted','success');window.location.href='/lxc';}catch(e){showToast(e.message,'error');}
+}
+
 loadPage();
 </script>
 </body>
