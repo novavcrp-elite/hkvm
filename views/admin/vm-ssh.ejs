@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSH Terminal - HKVM Admin</title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  
+  <!-- xterm.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+  
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0a0a0f; font-family: 'Courier New', monospace; }
+    
+    .ssh-container {
+      display: flex;
+      height: 100vh;
+      flex-direction: column;
+      background: #0a0a0f;
+    }
+    
+    .ssh-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: linear-gradient(90deg, #0f0f18 0%, #13131f 100%);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    
+    .ssh-title-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    
+    .ssh-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .admin-badge {
+      font-size: 9px;
+      background: rgba(99, 102, 241, 0.2);
+      color: #6366f1;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      margin-left: 4px;
+    }
+    
+    .ssh-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #ef4444;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .ssh-status.connected {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: #10b981;
+    }
+    
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .ssh-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .btn-ssh {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    
+    .btn-connect {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+    }
+    
+    .btn-connect:hover {
+      opacity: 0.9;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-disconnect {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      display: none;
+    }
+    
+    .btn-disconnect:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+    
+    .btn-back {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    
+    .btn-back:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      color: var(--text-primary);
+    }
+    
+    /* Terminal Container */
+    .ssh-terminal {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #0a0a0f;
+      position: relative;
+    }
+    
+    /* xterm.js customization */
+    .terminal-wrapper {
+      flex: 1;
+      overflow: hidden;
+      background: #0a0a0f;
+    }
+    
+    .terminal-wrapper .xterm {
+      height: 100%;
+      padding: 10px;
+    }
+    
+    /* Modal Styles */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-backdrop.show {
+      display: flex;
+      animation: fadeIn 0.25s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-dialog {
+      background: linear-gradient(135deg, #13131f 0%, #1a1f3a 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal-header {
+      padding: 20px;
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+      border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .modal-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .modal-footer {
+      padding: 16px 20px;
+      background: rgba(99, 102, 241, 0.02);
+      border-top: 1px solid rgba(99, 102, 241, 0.15);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 6px;
+      color: #f1f5f9;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      transition: all 0.2s;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: rgba(15, 23, 42, 0.95);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .btn-modal {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    
+    .btn-modal.primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+    
+    .btn-modal.primary:hover {
+      opacity: 0.9;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-modal.secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    
+    .btn-modal.secondary:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.05);
+    }
+    
+    /* Spinner for connecting */
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(99, 102, 241, 0.3);
+      border-top: 2px solid #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 6px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="ssh-container">
+  <!-- Header -->
+  <div class="ssh-header">
+    <div class="ssh-title-section">
+      <div class="ssh-title">
+        <i class="fas fa-terminal" style="color: #6366f1;"></i>
+        SSH Terminal <span class="admin-badge">ADMIN</span>
+      </div>
+      <div class="ssh-status" id="statusBadge">
+        <span class="status-dot"></span>
+        <span id="statusText">Disconnected</span>
+      </div>
+    </div>
+    
+    <div class="ssh-controls">
+      <button class="btn-ssh btn-connect" id="connectBtn" onclick="openModal()">
+        <i class="fas fa-link"></i>
+        Connect
+      </button>
+      <button class="btn-ssh btn-disconnect" id="disconnectBtn" onclick="disconnect()">
+        <i class="fas fa-plug"></i>
+        Disconnect
+      </button>
+      <a href="/admin/vms" class="btn-ssh btn-back">
+        <i class="fas fa-arrow-left"></i>
+        Back
+      </a>
+    </div>
+  </div>
+  
+  <!-- Terminal Display with xterm.js -->
+  <div class="ssh-terminal">
+    <div class="terminal-wrapper" id="terminalContainer"></div>
+  </div>
+</div>
+
+<!-- Connection Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <i class="fas fa-lock" style="font-size: 20px; color: #6366f1;"></i>
+      <h2 class="modal-title">SSH Connection</h2>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Host / IP Address</label>
+        <input type="text" class="form-input" id="inputHost" placeholder="192.168.1.100 or localhost">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Port</label>
+        <input type="number" class="form-input" id="inputPort" value="22" min="1" max="65535">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-input" id="inputUsername" placeholder="root or ubuntu">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="inputPassword" placeholder="••••••••">
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-modal secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal primary" onclick="connect()" id="connectModalBtn">
+        <i class="fas fa-play"></i>
+        Connect
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- xterm.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.7.0/lib/xterm-addon-web-links.min.js"></script>
+
+<script>
+// ============= GLOBAL STATE =============
+const vmId = <%= vmId %>;
+const userId = <%= userId %>;
+let ws = null;
+let isConnected = false;
+let term = null;
+const fitAddon = new FitAddon.FitAddon();
+
+// ============= TERMINAL INITIALIZATION =============
+function initTerminal() {
+  const container = document.getElementById('terminalContainer');
+  
+  term = new Terminal({
+    cols: 120,
+    rows: 30,
+    theme: {
+      background: '#0a0a0f',
+      foreground: '#d1d5db',
+      cursor: '#6366f1',
+      cursorAccent: '#0a0a0f',
+      black: '#1e1e1e',
+      red: '#ef4444',
+      green: '#10b981',
+      yellow: '#f59e0b',
+      blue: '#3b82f6',
+      magenta: '#ec4899',
+      cyan: '#06b6d4',
+      white: '#d1d5db',
+      brightBlack: '#6b7280',
+      brightRed: '#ef4444',
+      brightGreen: '#10b981',
+      brightYellow: '#fbbf24',
+      brightBlue: '#60a5fa',
+      brightMagenta: '#f472b6',
+      brightCyan: '#22d3ee',
+      brightWhite: '#f1f5f9'
+    },
+    fontSize: 13,
+    fontFamily: "'Courier New', 'Courier', monospace",
+    lineHeight: 1.2,
+    letterSpacing: 0,
+    fontWeight: 400,
+    cursorStyle: 'block',
+    cursorBlink: true,
+    scrollback: 5000
+  });
+  
+  // Load add-ons
+  term.loadAddon(fitAddon);
+  term.loadAddon(new WebLinksAddon.WebLinksAddon());
+  
+  // Open terminal in container
+  term.open(container);
+  
+  // Fit terminal to container size
+  fitAddon.fit();
+  
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    try {
+      fitAddon.fit();
+    } catch (e) {
+      console.error('[Terminal] Resize error:', e);
+    }
+  });
+  
+  // Handle terminal input
+  term.onData(data => {
+    if (ws && ws.readyState === WebSocket.OPEN && isConnected) {
+      ws.send(JSON.stringify({
+        type: 'input',
+        data: data
+      }));
+    }
+  });
+  
+  console.log('[Terminal] xterm.js initialized');
+}
+
+// ============= CONNECTION FUNCTIONS =============
+function setConnected(state) {
+  isConnected = state;
+  const badge = document.getElementById('statusBadge');
+  const connectBtn = document.getElementById('connectBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  
+  if (state) {
+    badge.classList.add('connected');
+    document.getElementById('statusText').textContent = 'Connected';
+    connectBtn.style.display = 'none';
+    disconnectBtn.style.display = 'inline-flex';
+    if (term) term.focus();
+  } else {
+    badge.classList.remove('connected');
+    document.getElementById('statusText').textContent = 'Disconnected';
+    connectBtn.style.display = 'inline-flex';
+    disconnectBtn.style.display = 'none';
+  }
+}
+
+// ============= MODAL FUNCTIONS =============
+function openModal() {
+  document.getElementById('modalBackdrop').classList.add('show');
+  document.getElementById('inputHost').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('show');
+}
+
+// ============= SSH CONNECTION =============
+function connect() {
+  const host = document.getElementById('inputHost').value.trim();
+  const port = document.getElementById('inputPort').value.trim();
+  const username = document.getElementById('inputUsername').value.trim();
+  const password = document.getElementById('inputPassword').value;
+  
+  if (!host || !port || !username) {
+    alert('Please fill in Host, Port, and Username');
+    return;
+  }
+  
+  // Disable connect button during connection
+  const connectBtn = document.getElementById('connectModalBtn');
+  connectBtn.disabled = true;
+  const originalHTML = connectBtn.innerHTML;
+  connectBtn.innerHTML = '<span class="spinner"></span>Connecting...';
+  
+  closeModal();
+  
+  if (term) {
+    term.clear();
+    term.write('\r\n\u001b[1;36m╔═════════════════════════════════════════════╗\u001b[0m\r\n');
+    term.write('\u001b[1;36m║  🔐 Connecting to SSH Server...            ║\u001b[0m\r\n');
+    term.write('\u001b[1;36m╚═════════════════════════════════════════════╝\u001b[0m\r\n');
+    term.write(`\r\n\u001b[33m[*]\u001b[0m Connecting to ${username}@${host}:${port}...\r\n`);
+  }
+  
+  // Determine WebSocket protocol
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = proto + '//' + window.location.host + '/ssh-terminal';
+  
+  try {
+    ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
+    console.log('[SSH] Connecting to WebSocket:', wsUrl);
+  } catch (e) {
+    console.error('[SSH] WebSocket creation failed:', e);
+    if (term) {
+      term.write('\r\n\u001b[1;31m✗ Error: Failed to create WebSocket connection\u001b[0m\r\n');
+    }
+    connectBtn.disabled = false;
+    connectBtn.innerHTML = originalHTML;
+    return;
+  }
+  
+  ws.onopen = function() {
+    console.log('[SSH] WebSocket opened');
+    
+    // Send SSH connection request
+    const message = {
+      type: 'connect',
+      vmId: vmId,
+      host: host,
+      port: parseInt(port),
+      username: username,
+      password: password
+    };
+    
+    console.log('[SSH] Sending connect message');
+    ws.send(JSON.stringify(message));
+  };
+  
+  ws.onmessage = function(event) {
+    try {
+      // Check if it's binary data (SSH output) or JSON (control messages)
+      if (event.data instanceof ArrayBuffer) {
+        // Binary data from SSH stream
+        const uint8Array = new Uint8Array(event.data);
+        const text = String.fromCharCode.apply(null, uint8Array);
+        if (term) {
+          term.write(text);
+        }
+      } else {
+        // JSON control messages
+        const message = JSON.parse(event.data);
+        
+        if (message.type === 'connected') {
+          console.log('[SSH] SSH connection established');
+          setConnected(true);
+          if (term) {
+            term.write('\r\n\u001b[1;32m✓ SSH Connection Established\u001b[0m\r\n\r\n');
+          }
+          connectBtn.disabled = false;
+          connectBtn.innerHTML = originalHTML;
+        } else if (message.type === 'closed') {
+          console.log('[SSH] SSH connection closed');
+          if (term) {
+            term.write('\r\n\r\n\u001b[1;31m⛔ SSH Connection Closed\u001b[0m\r\n');
+          }
+          setConnected(false);
+        } else if (message.type === 'error') {
+          console.error('[SSH] Error:', message.message);
+          if (term) {
+            term.write('\r\n\u001b[1;31m✗ Error: ' + message.message + '\u001b[0m\r\n');
+          }
+          setConnected(false);
+          connectBtn.disabled = false;
+          connectBtn.innerHTML = originalHTML;
+        }
+      }
+    } catch (e) {
+      console.error('[SSH] Message parse error:', e);
+      // If it's not valid JSON, it's probably binary SSH data
+      if (event.data instanceof Blob) {
+        event.data.arrayBuffer().then(buffer => {
+          const uint8Array = new Uint8Array(buffer);
+          const text = String.fromCharCode.apply(null, uint8Array);
+          if (term) {
+            term.write(text);
+          }
+        });
+      }
+    }
+  };
+  
+  ws.onerror = function(error) {
+    console.error('[SSH] WebSocket error:', error);
+    if (term) {
+      term.write('\r\n\u001b[1;31m✗ WebSocket Error: Connection failed\u001b[0m\r\n');
+    }
+    setConnected(false);
+    connectBtn.disabled = false;
+    connectBtn.innerHTML = originalHTML;
+  };
+  
+  ws.onclose = function() {
+    console.log('[SSH] WebSocket closed');
+    if (isConnected) {
+      if (term) {
+        term.write('\r\n\r\n\u001b[1;31m⛔ SSH Connection Closed\u001b[0m\r\n');
+      }
+    }
+    setConnected(false);
+    connectBtn.disabled = false;
+    connectBtn.innerHTML = originalHTML;
+  };
+}
+
+function disconnect() {
+  if (ws) {
+    console.log('[SSH] Closing WebSocket');
+    ws.close();
+  }
+  setConnected(false);
+}
+
+// ============= MODAL HELPERS =============
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+});
+
+// ============= INITIALIZATION =============
+async function initializePage() {
+  console.log('[SSH] Initializing admin page with vmId=' + vmId);
+  
+  try {
+    // Fetch VM details
+    const response = await fetch('/api/vms/' + vmId);
+    
+    if (!response.ok) {
+      console.error('[SSH] Failed to fetch VM:', response.status);
+      if (term) {
+        term.write('\u001b[1;31m✗ Error: Could not load VM details\u001b[0m\r\n');
+      }
+      return;
+    }
+    
+    const vm = await response.json();
+    console.log('[SSH] VM loaded:', vm.vm_name);
+    
+    // Auto-populate form with VM details (admin can access any VM)
+    setTimeout(() => {
+      if (vm.ipv4_address) document.getElementById('inputHost').value = vm.ipv4_address;
+      if (vm.ssh_port) document.getElementById('inputPort').value = vm.ssh_port;
+      else if (vm.ssh_port_static) document.getElementById('inputPort').value = vm.ssh_port_static;
+      else document.getElementById('inputPort').value = 2222;
+      if (vm.username) document.getElementById('inputUsername').value = vm.username;
+      if (vm.password) document.getElementById('inputPassword').value = vm.password;
+      
+      console.log('[SSH] Form populated, opening modal');
+      openModal();
+    }, 300);
+    
+  } catch (e) {
+    console.error('[SSH] Initialization error:', e);
+    if (term) {
+      term.write('\u001b[1;31m✗ Error: ' + e.message + '\u001b[0m\r\n');
+    }
+  }
+}
+
+// ============= PAGE LOAD =============
+window.addEventListener('load', function() {
+  // Initialize terminal first
+  initTerminal();
+  
+  // Show welcome message
+  term.write('\r\n\u001b[1;36m╔════════════════════════════════════════════════════════════╗\u001b[0m\r\n');
+  term.write('\u001b[1;36m║  🔐 HKVM v1 SSH Terminal (Admin) - Remote Access          ║\u001b[0m\r\n');
+  term.write('\u001b[1;36m║  Powered by xterm.js | Professional Terminal Emulation     ║\u001b[0m\r\n');
+  term.write('\u001b[1;36m╚════════════════════════════════════════════════════════════╝\u001b[0m\r\n');
+  term.write('\r\n\u001b[33m[*]\u001b[0m Click the \u001b[1mConnect\u001b[0m button or use \u001b[1;33mCtrl+O\u001b[0m to establish SSH connection\r\n');
+  term.write('\u001b[32m[✓]\u001b[0m After connecting, type commands directly in the terminal\r\n');
+  term.write('\u001b[34m[!]\u001b[0m Keyboard shortcuts:\r\n');
+  term.write('    • \u001b[1mCtrl+C\u001b[0m - Interrupt/stop running command\r\n');
+  term.write('    • \u001b[1mCtrl+D\u001b[0m - Close connection\r\n');
+  term.write('    • \u001b[1mCtrl+L\u001b[0m - Clear terminal screen\r\n');
+  term.write('\r\n\u001b[36m→ Ready for connection\u001b[0m\r\n\r\n');
+  
+  // Initialize page
+  initializePage();
+});
+
+// Add keyboard shortcut for quick connect (Ctrl+O)
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && (e.key === 'o' || e.key === 'O')) {
+    e.preventDefault();
+    if (!isConnected) {
+      openModal();
+    }
+  }
+});
+</script>
+
+</body>
+</html>
+
