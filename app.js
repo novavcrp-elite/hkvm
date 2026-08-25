@@ -1644,6 +1644,52 @@ app.get('/admin/settings', checkAuth, checkAdmin, (req, res) => {
   });
 });
 
+// Discord Bot Setup (admin only)
+app.get('/admin/discord-bot', checkAuth, checkAdmin, (req, res) => {
+  res.render('users/settings-discord', {
+    title: 'Discord Bot Setup - HKVM Panel',
+    currentPage: 'discord-bot',
+    user: { username: req.session.username, role: req.session.role, userId: req.session.userId }
+  });
+});
+
+// System Terminal (admin only)
+app.get('/admin/terminal', checkAuth, checkAdmin, (req, res) => {
+  res.render('users/settings-logs', {
+    title: 'System Terminal - HKVM Panel',
+    currentPage: 'terminal',
+    user: { username: req.session.username, role: req.session.role, userId: req.session.userId }
+  });
+});
+
+// Admin LXC List
+app.get('/admin/lxc', checkAuth, checkAdmin, (req, res) => {
+  res.render('users/lxc', {
+    title: 'LXC Containers - HKVM Panel',
+    currentPage: 'lxc',
+    user: { username: req.session.username, role: req.session.role, userId: req.session.userId }
+  });
+});
+
+// Admin LXC Create
+app.get('/admin/lxc/create', checkAuth, checkAdmin, (req, res) => {
+  res.render('users/lxc-create', {
+    title: 'Create LXC Container - HKVM Panel',
+    currentPage: 'lxc-create',
+    user: { username: req.session.username, role: req.session.role, userId: req.session.userId }
+  });
+});
+
+// Admin LXC Detail
+app.get('/admin/lxc/:id', checkAuth, checkAdmin, (req, res) => {
+  res.render('users/lxc-detail', {
+    title: 'LXC Container Detail - HKVM Panel',
+    currentPage: 'lxc-detail',
+    containerId: parseInt(req.params.id),
+    user: { username: req.session.username, role: req.session.role, userId: req.session.userId }
+  });
+});
+
 // OS Templates Management (admin only)
 app.get('/admin/templates', checkAuth, checkAdmin, (req, res) => {
   res.render('admin/templates', {
