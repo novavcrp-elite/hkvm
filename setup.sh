@@ -1,7 +1,7 @@
 #!/bin/bash
 #=====================================================
 #  HKVM Panel - One-Line Installer
-#  Usage: curl -sL https://raw.githubusercontent.com/novavcrp-elite/hkvm/main/setup.sh | bash
+#  Usage: curl -sL https://raw.githubusercontent.com/novavcrp-elite/hkvm/main/setup.sh | sudo bash
 #=====================================================
 
 set -e
@@ -26,6 +26,7 @@ echo -e "  ${CYAN}║       ${WHITE}HKVM Panel - Quick Installer${CYAN}         
 echo -e "  ${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo -e ""
 
+# Root check
 if [ "$EUID" -ne 0 ]; then
     echo -e "  ${RED}✗ Please run as root (sudo)${NC}"
     exit 1
@@ -40,7 +41,7 @@ elif command -v yum &>/dev/null; then
     yum install -y -q curl wget git &>/dev/null
 fi
 
-# Install Node.js
+# Node.js
 if ! command -v node &>/dev/null; then
     echo -e "  ${BLUE}ℹ${NC} Installing Node.js..."
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - &>/dev/null
@@ -87,16 +88,21 @@ mkdir -p "$HOME/.hkvm" "$HOME/vms/templates" "$HOME/vms/iso" "$HOME/vms/cloudvm"
 
 # Create .env
 if [ ! -f "$INSTALL_DIR/.env" ]; then
+    secret=$(openssl rand -hex 32 2>/dev/null || echo "change-me-in-production")
     cat > "$INSTALL_DIR/.env" << EOF
+# HKVM Panel Configuration
 PORT=${PORT}
 PANEL_NAME=HKVM Panel
 PANEL_VERSION=V1.0
 DEFAULT_LOGO_URL=https://i.imgur.com/0DmkSi4.png
 HKVM_DATA_DIR=$HOME/.hkvm
+# DISCORD_BOT_TOKEN=
+# DISCORD_ADMIN_IDS=
+INTERNAL_API_SECRET=${secret}
 EOF
 fi
 
-# Create systemd service
+# Systemd service
 cat > /etc/systemd/system/hkvm.service << EOF
 [Unit]
 Description=HKVM Panel
@@ -117,13 +123,13 @@ systemctl daemon-reload 2>/dev/null
 chmod +x "$INSTALL_DIR/install.sh" 2>/dev/null
 
 # Create /usr/local/bin/hkvm command
-cat > /usr/local/bin/hkvm << 'EOF2'
+cat > /usr/local/bin/hkvm << 'EOF'
 #!/bin/bash
 bash /opt/hkvm/install.sh
-EOF2
+EOF
 chmod +x /usr/local/bin/hkvm
 
-# Start
+# Start HKVM
 echo -e "  ${BLUE}ℹ${NC} Starting HKVM Panel..."
 cd "$INSTALL_DIR"
 nohup node app.js > /tmp/hkvm.log 2>&1 &
