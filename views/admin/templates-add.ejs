@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        /* Page Layout */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-content { flex: 1; }
+
+        .header-title {
+            margin-bottom: 8px;
+        }
+
+        .header-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 4px 0 0 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-color-hover);
+            color: var(--text-primary);
+            transform: translateX(-2px);
+        }
+
+        /* Two Column Layout */
+        .form-wrapper {
+            max-width: 1200px;
+        }
+
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+        }
+
+        .form-intro {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 32px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .intro-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .intro-content {
+            flex: 1;
+        }
+
+        .intro-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .intro-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Two Column Sections */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .form-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-icon {
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .required {
+            color: var(--accent-red);
+            font-weight: 700;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 11px 13px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: var(--shadow-focus);
+            background: var(--bg-input);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 90px;
+            font-family: inherit;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: block;
+            line-height: 1.5;
+        }
+
+        /* Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        /* Icon Picker */
+        .icon-picker {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .icon-input-wrapper {
+            flex: 1;
+        }
+
+        .icon-preview {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+            transition: all var(--transition-fast);
+            overflow: hidden;
+        }
+
+        .icon-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+        }
+
+        .form-control:focus ~ .icon-preview,
+        .icon-picker:focus-within .icon-preview {
+            border-color: var(--border-focus);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 13px;
+            animation: slideDown 0.3s var(--ease-out);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .alert-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .alert-content {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .form-actions .btn {
+            padding: 11px 22px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn.loading {
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        .btn.loading::after {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 6px;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .info-box-icon {
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* Mobile Responsive - Tablet */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column-reverse;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .two-column-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .column {
+                gap: 20px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .form-grid,
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+
+            .icon-picker {
+                flex-direction: column;
+            }
+
+            .icon-preview {
+                width: 100%;
+                height: 80px;
+            }
+
+            .form-intro {
+                flex-direction: column;
+            }
+        }
+
+        /* Mobile Responsive - Phone */
+        @media (max-width: 480px) {
+            .header-title h1 {
+                font-size: 24px;
+            }
+
+            .form-card {
+                padding: 16px;
+            }
+
+            .form-section {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/sidebar') %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin/header') %>
+        
+        <main class="admin-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <div class="header-title">
+                        <h1><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 8px; color: #6366F1; vertical-align: middle;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path><polyline points="3.27 6.96 12 12.5 20.73 6.96"></polyline><line x1="12" y1="22.5" x2="12" y2="12"></line></svg>Add New OS Template</h1>
+                        <p>Create a custom operating system template for your VMs</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <a href="/admin/templates" class="back-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back to Templates
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Form -->
+            <div class="form-wrapper">
+                <div class="form-card">
+                    <!-- Intro -->
+                    <div class="form-intro">
+                        <div class="intro-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366F1;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                        <div class="intro-content">
+                            <div class="intro-title">Create a New Template</div>
+                            <div class="intro-text">
+                                Templates are reusable OS images that can be cached locally for faster VM deployment. 
+                                Once created, this template will appear in your template library.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <form id="addTemplateForm" onsubmit="submitForm(event)">
+                        <!-- Two Column Layout -->
+                        <div class="two-column-layout">
+                            <!-- Left Column -->
+                            <div class="column">
+                                <!-- Template Basics Section -->
+                                <div class="form-section">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366F1;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V10z"></path><polyline points="14 2 14 10 22 10"></polyline></svg></div>
+                                        <h2 class="section-title">Template Basics</h2>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            Template Key
+                                            <span class="required">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="templateKey" 
+                                               placeholder="ubuntu-22-custom" required 
+                                               pattern="[a-z0-9-]+" 
+                                               title="Use lowercase letters, numbers, and hyphens only">
+                                        <span class="help-text">Unique identifier (e.g., ubuntu-22-custom, debian-12-server)</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            Template Name
+                                            <span class="required">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="templateName" 
+                                               placeholder="Ubuntu 22.04 Custom" required>
+                                        <span class="help-text">Display name shown in the UI (e.g., Ubuntu 22.04 LTS Custom)</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" id="templateDesc" 
+                                                 placeholder="Brief description of this template, what it includes, and its purpose..."></textarea>
+                                        <span class="help-text">Optional: Up to 500 characters describing this template</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Template Icon / Image URL</label>
+                                        <div class="icon-picker">
+                                            <div class="icon-input-wrapper">
+                                                <input type="text" class="form-control" id="templateIcon" 
+                                                       placeholder="https://example.com/icon.png or emoji like 📦" 
+                                                       onchange="updateIconPreview()">
+                                                <span class="help-text">Image URL (PNG/JPG/SVG) or single emoji character</span>
+                                                <div class="info-box">
+                                                    <div class="info-box-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366F1;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                                                    <div>
+                                                        Image URL example: https://ubuntu.com/logo.png
+                                                        <br>Or use emoji: 📦 🐧 🔴 🟠 ⚫ 🟣
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="icon-preview" id="iconPreview">📦</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Download Source Section -->
+                                <div class="form-section">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #06B6D4;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                                        <h2 class="section-title">Download Source</h2>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Download URL</label>
+                                        <input type="url" class="form-control" id="templateURL" 
+                                               placeholder="https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img">
+                                        <span class="help-text">Optional: Direct HTTPS URL to the template image. Will be cached locally after first download.</span>
+                                        <div class="info-box">
+                                            <div class="info-box-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366F1;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                                            <div>Leave empty if you'll upload the template file manually later</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="column">
+                                <!-- Default Resources Section -->
+                                <div class="form-section">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #F59E0B;"><circle cx="12" cy="12" r="1"></circle><path d="M12 1v6m0 6v6"></path><path d="M4.22 4.22l4.24 4.24m2.08 2.08l4.24 4.24"></path><path d="M1 12h6m6 0h6"></path><path d="M4.22 19.78l4.24-4.24m2.08-2.08l4.24-4.24"></path></svg></div>
+                                        <h2 class="section-title">Default Resources</h2>
+                                    </div>
+
+                                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+                                        These default values will be used when creating new VMs from this template. 
+                                        Users can override these values during VM creation.
+                                    </p>
+
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                Template Type
+                                                <span class="required">*</span>
+                                            </label>
+                                            <select class="form-control" id="templateType" onchange="updateTemplateTypeUI()" required>
+                                                <option value="cloud-init" selected><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; margin-right:4px; color:#06B6D4; vertical-align:middle;"><path d="M22 12c0-1.104-.895-2-2-2a2 2 0 00-2-2c-1.104 0-2 .896-2 2h-2c0-1.104-.895-2-2-2a2 2 0 00-2-2c-2.21 0-4 1.79-4 4 0 .352.058.69.162 1.012C5.48 10.907 4 13.243 4 16c0 3.866 3.134 7 7 7h8c2.21 0 4-1.79 4-4 0-1.104-.895-2-2-2a2 2 0 00-2-2c1.104 0 2-.896 2-2 0-1.104-.895-2-2-2z"></path></svg>Cloud-Init (Auto-provisioning)</option>
+                                                <option value="iso"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; margin-right:4px; color:#10B981; vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>ISO Installer (Manual Install)</option>
+                                            </select>
+                                            <span class="help-text">Choose template type - Cloud-Init for automatic setup or ISO for manual OS installation</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Memory (MB)</label>
+                                            <input type="number" class="form-control" id="templateMemory" 
+                                                   value="2048" min="512" step="512">
+                                            <span class="help-text">RAM allocated to VMs (e.g., 2048, 4096, 8192)</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">vCPUs</label>
+                                            <input type="number" class="form-control" id="templateCPUs" 
+                                                   value="2" min="1" max="16" step="1">
+                                            <span class="help-text">Virtual CPU cores (1-16)</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Disk Size</label>
+                                            <input type="text" class="form-control" id="templateDiskSize" 
+                                                   value="20G" placeholder="20G" pattern="[0-9]+[KMGT]" required>
+                                            <span class="help-text">Disk allocation (e.g., 20G, 50G, 100G)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Default Credentials Section -->
+                                <div class="form-section" id="credentialsSection">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #EF4444;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"></path></svg></div>
+                                        <h2 class="section-title">Default Credentials</h2>
+                                    </div>
+
+                                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+                                        Default login credentials for VMs created from this template (Cloud-Init only). 
+                                        These will be provided to users during VM creation.
+                                    </p>
+
+                                    <div class="form-grid-2">
+                                        <div class="form-group">
+                                            <label class="form-label">Default Username</label>
+                                            <input type="text" class="form-control" id="templateUser" 
+                                                   value="ubuntu" placeholder="ubuntu">
+                                            <span class="help-text">e.g., ubuntu, debian, root, centos</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Default Password</label>
+                                            <input type="text" class="form-control" id="templatePass" 
+                                                   value="ubuntu" placeholder="password">
+                                            <span class="help-text">Default password for VMs created from this template</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-box">
+                                        <div class="info-box-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366F1;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                                        <div>
+                                            <strong>Cloud-Init Only:</strong> These credentials are only used with Cloud-Init templates. 
+                                            For ISO templates, credentials are set during manual OS installation.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <a href="/admin/templates" class="btn btn-ghost">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Create Template
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <%- include('../partials/admin/footer') %>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <script>
+        function updateIconPreview() {
+            const value = document.getElementById('templateIcon').value.trim();
+            const preview = document.getElementById('iconPreview');
+            
+            if (!value) {
+                preview.innerHTML = '📦';
+                return;
+            }
+
+            // Check if it's a URL (starts with http:// or https://)
+            if (value.startsWith('http://') || value.startsWith('https://')) {
+                // It's an image URL
+                preview.innerHTML = `<img src="${value}" alt="Template icon" onerror="this.parentElement.innerHTML='❌';">`;
+            } else {
+                // It's an emoji or text
+                preview.innerHTML = value.substring(0, 2);
+            }
+        }
+
+        function updateTemplateTypeUI() {
+            const templateType = document.getElementById('templateType').value;
+            const credentialsSection = document.getElementById('credentialsSection');
+            
+            if (!credentialsSection) {
+                console.warn('credentialsSection element not found');
+                return;
+            }
+            
+            if (templateType === 'iso') {
+                // Hide credentials section for ISO templates
+                credentialsSection.style.display = 'none';
+            } else {
+                // Show credentials section for Cloud-Init
+                credentialsSection.style.display = 'block';
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const div = document.createElement('div');
+            div.className = `alert alert-${type}`;
+            
+            const icon = type === 'success' ? '✓' : '✕';
+            div.innerHTML = `
+                <div class="alert-icon">${icon}</div>
+                <div class="alert-content">${message}</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(div);
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    div.style.opacity = '0';
+                    div.style.transition = 'opacity 0.3s';
+                    setTimeout(() => div.remove(), 300);
+                }, 3000);
+            }
+        }
+
+        async function submitForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                const templateType = document.getElementById('templateType').value;
+                
+                const formData = {
+                    template_key: document.getElementById('templateKey').value.toLowerCase().trim(),
+                    template_name: document.getElementById('templateName').value.trim(),
+                    icon: document.getElementById('templateIcon').value.trim() || '📦',
+                    description: document.getElementById('templateDesc').value.trim(),
+                    memory: parseInt(document.getElementById('templateMemory').value) || 2048,
+                    cpus: parseInt(document.getElementById('templateCPUs').value) || 2,
+                    disk_size: document.getElementById('templateDiskSize').value.trim(),
+                    template_type: templateType,
+                    download_url: document.getElementById('templateURL').value.trim(),
+                    username: templateType === 'iso' ? '' : document.getElementById('templateUser').value.trim(),
+                    password: templateType === 'iso' ? '' : document.getElementById('templatePass').value.trim()
+                };
+
+                // Validate form data
+                if (!formData.template_key || !/^[a-z0-9-]+$/.test(formData.template_key)) {
+                    throw new Error('Template key must contain only lowercase letters, numbers, and hyphens');
+                }
+
+                if (!formData.template_name) {
+                    throw new Error('Template name is required');
+                }
+
+                if (!formData.disk_size || !/^[0-9]+[KMGT]$/.test(formData.disk_size)) {
+                    throw new Error('Invalid disk size format (e.g., 20G, 50G)');
+                }
+
+                const response = await fetch('/api/admin/templates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to create template');
+                }
+
+                showAlert('✓ Template created successfully! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin/templates';
+                }, 1500);
+            } catch (error) {
+                showAlert('✕ ' + error.message, 'error');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateIconPreview();
+            updateTemplateTypeUI();
+        });
+        
+        document.getElementById('templateIcon').addEventListener('change', updateIconPreview);
+        document.getElementById('templateType').addEventListener('change', updateTemplateTypeUI);
+    </script>
+</body>
+</html>

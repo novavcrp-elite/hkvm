@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Discord Linking - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content" id="pageContent">
+      <div style="text-align: center; padding: 80px;">
+        <div class="spinner spinner-lg" style="margin: 0 auto 16px;"></div>
+        <div style="color: var(--text-muted);">Loading...</div>
+      </div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+function svg(id, size = 14) {
+  return `<svg width="${size}" height="${size}"><use href="#${id}"/></svg>`;
+}
+
+async function loadPage() {
+  try {
+    const res = await fetch('/api/discord/link-status');
+    const data = await res.json();
+    renderPage(data);
+  } catch(e) {
+    renderPage({ linked: false, error: e.message });
+  }
+}
+
+function renderPage(data) {
+  document.getElementById('pageContent').innerHTML = `
+    <div class="page-header">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <a href="/profile" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 13px;">
+          ${svg('i-back', 14)} Back to Profile
+        </a>
+      </div>
+      <h1 class="page-title">${svg('i-link', 18)} Discord Account Linking</h1>
+    </div>
+
+    <div class="card" style="max-width: 600px;">
+      <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(88,101,242,0.12); color: #5865F2; display: flex; align-items: center; justify-content: center; font-size: 20px;">🎮</div>
+          <div>
+            <div style="font-weight: 700; font-size: 14px;">Discord Integration</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Link your HKVM Panel account with Discord for remote VM management</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        ${data.linked ? `
+          <!-- Already Linked -->
+          <div style="text-align: center; padding: 30px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16,185,129,0.12); color: #10B981; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px;">
+              ${svg('i-check', 32)}
+            </div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Account Linked</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+              Your Discord account <strong>${escHtml(data.discordUsername || 'Unknown')}</strong> is linked to your panel account.
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">
+              Linked since: ${data.linkedAt ? new Date(data.linkedAt).toLocaleString() : 'Unknown'}
+            </div>
+            <button class="btn btn-danger" onclick="unlinkDiscord()">
+              ${svg('i-x', 14)} Unlink Discord Account
+            </button>
+          </div>
+        ` : `
+          <!-- Not Linked -->
+          <div style="text-align: center; padding: 30px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(88,101,242,0.12); color: #5865F2; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px;">
+              🎮
+            </div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Link Your Discord Account</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">
+              Connect your Discord account to manage VMs directly from Discord using slash commands.
+            </div>
+
+            <!-- Steps -->
+            <div style="text-align: left; margin-bottom: 24px;">
+              <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;">
+                <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--accent-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;">1</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Generate a linking code</div>
+                  <div style="font-size: 12px; color: var(--text-muted);">Click the button below to get a one-time code</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;">
+                <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--accent-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;">2</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Use the code in Discord</div>
+                  <div style="font-size: 12px; color: var(--text-muted);">Run <code style="background: rgba(99,102,241,0.1); padding: 2px 6px; border-radius: 4px;">/link YOUR_CODE</code> in the Discord bot</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--accent-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;">3</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Account linked!</div>
+                  <div style="font-size: 12px; color: var(--text-muted);">You can now use Discord slash commands to manage your VMs</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Generate Code -->
+            <div id="codeSection">
+              <button class="btn btn-primary" onclick="generateCode()" id="generateCodeBtn">
+                ${svg('i-link', 14)} Generate Linking Code
+              </button>
+            </div>
+
+            <!-- Generated Code (hidden by default) -->
+            <div id="codeDisplay" style="display: none;">
+              <div style="padding: 20px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius-md); margin-bottom: 16px;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">HKVM Link Code</div>
+                <div style="font-size: 28px; font-weight: 800; font-family: monospace; color: var(--accent-primary); letter-spacing: 6px;" id="linkCode">------</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                  Expires in: <span id="codeCountdown" style="color: var(--accent-primary); font-weight: 600;">10:00</span>
+                </div>
+              </div>
+              <button class="btn btn-ghost" onclick="copyCode()" style="margin-bottom: 10px;">
+                ${svg('i-copy', 13)} Copy Code
+              </button>
+              <div style="font-size: 12px; color: var(--text-muted);">
+                In Discord, type: <code style="background: rgba(99,102,241,0.1); padding: 2px 6px; border-radius: 4px;">/link <span id="codeInExample">YOUR_CODE</span></code>
+              </div>
+            </div>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+
+  // If code was generated, show it
+  if (data.pendingCode) {
+    showCode(data.pendingCode);
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+let codeTimer = null;
+
+async function generateCode() {
+  const btn = document.getElementById('generateCodeBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;"></span> Generating...`;
+
+  try {
+    const res = await fetch('/api/discord/generate-code', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    showCode(data.code);
+  } catch(e) {
+    alert(e.message);
+    btn.disabled = false;
+    btn.innerHTML = `${svg('i-link', 14)} Generate Linking Code`;
+  }
+}
+
+function showCode(code) {
+  document.getElementById('codeSection').style.display = 'none';
+  document.getElementById('codeDisplay').style.display = 'block';
+  document.getElementById('linkCode').textContent = code;
+  document.getElementById('codeInExample').textContent = code;
+
+  // Start countdown (10 minutes)
+  let remaining = 600;
+  if (codeTimer) clearInterval(codeTimer);
+  codeTimer = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(codeTimer);
+      document.getElementById('codeCountdown').textContent = 'Expired';
+      return;
+    }
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    document.getElementById('codeCountdown').textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+  }, 1000);
+}
+
+function copyCode() {
+  const code = document.getElementById('linkCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    if (typeof showToast === 'function') showToast('Code copied to clipboard', 'success');
+  });
+}
+
+async function unlinkDiscord() {
+  if (!confirm('Are you sure you want to unlink your Discord account?')) return;
+
+  try {
+    const res = await fetch('/api/discord/unlink', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    if (typeof showToast === 'function') showToast('Discord account unlinked', 'success');
+    loadPage();
+  } catch(e) {
+    alert(e.message);
+  }
+}
+
+loadPage();
+</script>
+</body>
+</html>

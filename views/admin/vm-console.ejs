@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'VM Console - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    body { background: #050508; }
+    
+    .console-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .console-header {
+      height: 52px;
+      background: #0c0c14;
+      border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    
+    .console-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    #terminal {
+      flex: 1;
+      background: #050508;
+      padding: 16px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    #terminal::-webkit-scrollbar { width: 6px; }
+    #terminal::-webkit-scrollbar-track { background: #0a0a0f; }
+    #terminal::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 3px; }
+    
+    .console-input-bar {
+      background: #0c0c14;
+      border-top: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    
+    .console-prompt {
+      color: #6366f1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    
+    #cmdInput {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      caret-color: #6366f1;
+    }
+    
+    #cmdInput::placeholder { color: #475569; }
+    
+    .ansi-green { color: #10b981; }
+    .ansi-red { color: #ef4444; }
+    .ansi-yellow { color: #f59e0b; }
+    .ansi-blue { color: #60a5fa; }
+    .ansi-cyan { color: #22d3ee; }
+    .ansi-white { color: #f1f5f9; }
+    .ansi-gray { color: #64748b; }
+    .ansi-bold { font-weight: bold; }
+    
+    @keyframes scan-line {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+    
+    .crt-effect {
+      position: relative;
+    }
+    
+    .crt-effect::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.02) 0px,
+        rgba(0,0,0,0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="console-wrapper">
+
+  <!-- Console Header -->
+  <div class="console-header">
+    <div class="terminal-dot red"></div>
+    <div class="terminal-dot yellow"></div>
+    <div class="terminal-dot green"></div>
+
+    <div style="flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0;">
+      <a href="/admin/vm/<%= vmId %>" style="color: var(--text-muted); text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back
+      </a>
+
+      <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+
+      <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" style="flex-shrink:0;">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #a5f3fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          Console: VM #<%= vmId %> <span id="vmNameLabel" style="color: #64748b;"></span>
+        </span>
+      </div>
+
+      <span id="wsStatus" style="margin-left: auto; font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(239, 68, 68, 0.15); color: #ef4444; flex-shrink: 0;">
+        ⚫ Connecting...
+      </span>
+    </div>
+
+    <div style="display: flex; gap: 6px; flex-shrink: 0;">
+      <button onclick="clearTerminal()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 11px;" title="Clear console">
+        Clear
+      </button>
+      <button onclick="scrollToBottom()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 11px;" title="Scroll to bottom">
+        ↓ Bottom
+      </button>
+      <button onclick="toggleWrap()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 11px;" id="wrapBtn" title="Toggle word wrap">
+        Wrap
+      </button>
+    </div>
+  </div>
+
+  <!-- Console Body -->
+  <div class="console-body">
+    <div id="terminal" class="crt-effect">
+      <span style="color: #6366f1;"><%= siteName %></span> - VM Console (ID: <%= vmId %>)
+      
+      <span style="color: #64748b;">Connecting to WebSocket...</span>
+      
+    </div>
+
+    <!-- Input Bar -->
+    <div class="console-input-bar">
+      <span class="console-prompt">vm@<%= vmId %>:~$</span>
+      <input
+        type="text"
+        id="cmdInput"
+        placeholder="Type command and press Enter..."
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      >
+      <button onclick="sendCommand()" style="background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 12px; font-family: inherit; white-space: nowrap;">
+        Send ↵
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast Container (no sidebar) -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const vmId = <%= vmId %>;
+let ws = null;
+let commandHistory = [];
+let historyIndex = -1;
+let autoScroll = true;
+let wordWrap = true;
+
+// Load VM name
+fetch(`/api/vms/${vmId}`)
+  .then(r => r.json())
+  .then(vm => {
+    const label = document.getElementById('vmNameLabel');
+    if (label) label.textContent = `— ${vm.vm_name || ''}`;
+  }).catch(() => {});
+
+// Connect WebSocket
+function connectWS() {
+  const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/console/${vmId}`;
+  updateWSStatus('connecting');
+  
+  try {
+    ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
+    
+    ws.onopen = () => {
+      updateWSStatus('connected');
+      appendOutput('\r\n\x1b[32m✓ WebSocket connected\x1b[0m\r\n');
+    };
+    
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'output' && msg.data) {
+          appendOutput(msg.data);
+        }
+      } catch(e) {
+        if (typeof event.data === 'string') {
+          appendOutput(event.data);
+        }
+      }
+    };
+    
+    ws.onclose = () => {
+      updateWSStatus('disconnected');
+      appendOutput('\r\n\x1b[31m✗ Connection closed\x1b[0m\r\n');
+      // Auto-reconnect after 3s
+      setTimeout(connectWS, 3000);
+    };
+    
+    ws.onerror = () => {
+      updateWSStatus('error');
+      appendOutput('\r\n\x1b[31m✗ WebSocket error\x1b[0m\r\n');
+    };
+  } catch(e) {
+    updateWSStatus('error');
+    appendOutput(`\r\n\x1b[31m✗ Connection error: ${e.message}\x1b[0m\r\n`);
+    setTimeout(connectWS, 3000);
+  }
+}
+
+function updateWSStatus(state) {
+  const el = document.getElementById('wsStatus');
+  if (!el) return;
+  const states = {
+    connecting: { text: '🟡 Connecting...', style: 'background: rgba(245, 158, 11, 0.15); color: #fbbf24;' },
+    connected: { text: '🟢 Connected', style: 'background: rgba(16, 185, 129, 0.15); color: #34d399;' },
+    disconnected: { text: '⚫ Disconnected', style: 'background: rgba(100, 116, 139, 0.15); color: #94a3b8;' },
+    error: { text: '🔴 Error', style: 'background: rgba(239, 68, 68, 0.15); color: #f87171;' }
+  };
+  const s = states[state] || states.disconnected;
+  el.textContent = s.text;
+  el.style.cssText = `margin-left: auto; font-size: 11px; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; ${s.style}`;
+}
+
+// ANSI color escape code parser
+function parseAnsi(text) {
+  return text
+    .replace(/\x1b\[32m/g, '<span class="ansi-green">')
+    .replace(/\x1b\[31m/g, '<span class="ansi-red">')
+    .replace(/\x1b\[33m/g, '<span class="ansi-yellow">')
+    .replace(/\x1b\[34m/g, '<span class="ansi-blue">')
+    .replace(/\x1b\[36m/g, '<span class="ansi-cyan">')
+    .replace(/\x1b\[37m/g, '<span class="ansi-white">')
+    .replace(/\x1b\[0m/g, '</span>')
+    .replace(/\x1b\[1m/g, '<span class="ansi-bold">')
+    .replace(/\x1b\[\d+m/g, '')  // Remove other escape codes
+    .replace(/\x1b\[\d+;\d+m/g, '')
+    .replace(/\x1b\[\d+;\d+;\d+m/g, '')
+    .replace(/\x1b\[[\d;]*[A-Za-z]/g, '');  // Remove cursor codes
+}
+
+function appendOutput(text) {
+  const terminal = document.getElementById('terminal');
+  if (!terminal) return;
+  
+  // Parse ANSI codes
+  const parsed = parseAnsi(escTerminal(text));
+  
+  // Append as HTML
+  const span = document.createElement('span');
+  span.innerHTML = parsed;
+  terminal.appendChild(span);
+  
+  // Auto-scroll
+  if (autoScroll) {
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+  
+  // Limit terminal buffer (keep last 5000 lines)
+  const children = terminal.children;
+  if (children.length > 5000) {
+    terminal.removeChild(children[0]);
+  }
+}
+
+function escTerminal(str) {
+  // Only escape HTML-dangerous chars, preserve \r\n
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n/g, '<br>');
+}
+
+function clearTerminal() {
+  const terminal = document.getElementById('terminal');
+  terminal.innerHTML = '';
+  appendOutput('\x1b[36m[Console cleared]\x1b[0m\r\n');
+}
+
+function scrollToBottom() {
+  const terminal = document.getElementById('terminal');
+  terminal.scrollTop = terminal.scrollHeight;
+  autoScroll = true;
+}
+
+function toggleWrap() {
+  const terminal = document.getElementById('terminal');
+  const btn = document.getElementById('wrapBtn');
+  wordWrap = !wordWrap;
+  terminal.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+  terminal.style.wordBreak = wordWrap ? 'break-all' : 'normal';
+  btn.style.color = wordWrap ? '#818cf8' : 'var(--text-muted)';
+}
+
+// Detect manual scroll
+document.getElementById('terminal').addEventListener('scroll', function() {
+  const el = this;
+  autoScroll = el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
+});
+
+// Send command
+function sendCommand() {
+  const input = document.getElementById('cmdInput');
+  const cmd = input.value;
+  
+  if (!cmd.trim() && cmd !== '') return;
+  
+  // Add to history
+  if (cmd.trim()) {
+    commandHistory.unshift(cmd);
+    if (commandHistory.length > 100) commandHistory.pop();
+    historyIndex = -1;
+  }
+  
+  // Display command
+  appendOutput(`\r\n<span class="ansi-green">vm@${vmId}:~$</span> ${escTerminal(cmd)}\r\n`);
+  
+  // Send via WebSocket
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'input', data: cmd + '\n' }));
+  } else {
+    // Fallback: HTTP API
+    fetch(`/api/vms/${vmId}/console/command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd })
+    }).catch(() => {});
+  }
+  
+  input.value = '';
+}
+
+// Command input handling
+document.getElementById('cmdInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    sendCommand();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    historyIndex = Math.min(historyIndex + 1, commandHistory.length - 1);
+    if (commandHistory[historyIndex]) {
+      document.getElementById('cmdInput').value = commandHistory[historyIndex];
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    historyIndex = Math.max(historyIndex - 1, -1);
+    document.getElementById('cmdInput').value = historyIndex >= 0 ? (commandHistory[historyIndex] || '') : '';
+  } else if (e.key === 'l' && e.ctrlKey) {
+    e.preventDefault();
+    clearTerminal();
+  }
+});
+
+// Toast system
+window.showToast = function(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-message">${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.remove(); }, duration);
+};
+
+// Initialize
+connectWS();
+document.getElementById('cmdInput').focus();
+
+// Initial scroll to bottom after a small delay
+setTimeout(() => {
+  const t = document.getElementById('terminal');
+  if (t) t.scrollTop = t.scrollHeight;
+}, 500);
+</script>
+</body>
+</html>
+
+
+

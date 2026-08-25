@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Terminal - HKVM Panel</title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .terminal-container { background: #0a0a0f; border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
+    .terminal-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #111118; border-bottom: 1px solid var(--border-subtle); }
+    .terminal-header .dots { display: flex; gap: 6px; }
+    .terminal-header .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-header .dot-red { background: #EF4444; }
+    .terminal-header .dot-yellow { background: #F59E0B; }
+    .terminal-header .dot-green { background: #10B981; }
+    .terminal-body { padding: 16px; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace; font-size: 12px; line-height: 1.6; color: #10B981; height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+    .terminal-body .log-line { margin-bottom: 2px; }
+    .terminal-body .log-error { color: #EF4444; }
+    .terminal-body .log-warn { color: #F59E0B; }
+    .terminal-body .log-info { color: #3B82F6; }
+    .terminal-body .log-time { color: #6B7280; margin-right: 8px; }
+    .terminal-input-wrap { display: flex; align-items: center; padding: 8px 16px; background: #111118; border-top: 1px solid var(--border-subtle); }
+    .terminal-input-wrap .prompt { color: #10B981; margin-right: 8px; font-family: monospace; font-size: 12px; }
+    .terminal-input { flex: 1; background: transparent; border: none; color: #fff; font-family: monospace; font-size: 12px; outline: none; }
+    .terminal-toolbar { display: flex; gap: 8px; align-items: center; }
+  </style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content">
+      <div class="page-header" style="align-items:center;">
+        <div style="display: flex; align-items: center; gap: 14px; flex: 1;">
+          <a href="/dashboard" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 13px;">
+            <svg width="14" height="14"><use href="#i-back"/></svg> Back
+          </a>
+          <div>
+            <h1 class="page-title"><svg width="18" height="18"><use href="#i-terminal"/></svg> System Terminal</h1>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">Live panel logs and system output</p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline btn-sm" onclick="clearTerminal()" style="border-color: rgba(239,68,68,0.3); color: #EF4444;">Clear</button>
+          <button class="btn btn-outline btn-sm" onclick="refreshLogs()" id="refreshBtn">
+            <svg width="13" height="13"><use href="#i-refresh"/></svg> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="terminal-container">
+        <div class="terminal-header">
+          <div class="dots">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); font-family: monospace;">hkvm-panel ~ logs</div>
+          <div class="terminal-toolbar">
+            <select id="logFilter" onchange="filterLogs()" style="padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); color: var(--text-primary); font-size: 11px; cursor: pointer;">
+              <option value="all">All</option>
+              <option value="error">Errors</option>
+              <option value="warn">Warnings</option>
+              <option value="info">Info</option>
+              <option value="auth">Auth</option>
+              <option value="vm">VM</option>
+              <option value="lxc">LXC</option>
+            </select>
+          </div>
+        </div>
+        <div class="terminal-body" id="terminalBody">
+          <div style="color: #6B7280;">Loading logs...</div>
+        </div>
+        <div class="terminal-input-wrap">
+          <span class="prompt">root@hkvm:~$</span>
+          <input type="text" class="terminal-input" id="cmdInput" placeholder="Type a command..." onkeydown="if(event.key==='Enter')runCommand()">
+        </div>
+      </div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+let allLogs = [];
+
+async function refreshLogs() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  
+  try {
+    const res = await fetch('/api/system/logs');
+    if (!res.ok) throw new Error('Failed to fetch logs');
+    const data = await res.json();
+    allLogs = data.logs || [];
+    renderLogs(allLogs);
+  } catch(e) {
+    const term = document.getElementById('terminalBody');
+    term.innerHTML = `<div class="log-line log-error">[ERROR] ${e.message}</div>`;
+  } finally {
+    setTimeout(() => btn.classList.remove('spinning'), 500);
+  }
+}
+
+function renderLogs(logs) {
+  const term = document.getElementById('terminalBody');
+  if (logs.length === 0) {
+    term.innerHTML = `<div style="color: #6B7280;">No logs found. Logs will appear as the panel runs.</div>`;
+    return;
+  }
+  term.innerHTML = logs.map(line => {
+    let cls = '';
+    const lower = line.toLowerCase();
+    if (lower.includes('error') || lower.includes('fail')) cls = 'log-error';
+    else if (lower.includes('warn')) cls = 'log-warn';
+    else if (lower.includes('auth') || lower.includes('login')) cls = 'log-info';
+    return `<div class="log-line ${cls}">${escHtml(line)}</div>`;
+  }).join('');
+  term.scrollTop = term.scrollHeight;
+}
+
+function filterLogs() {
+  const filter = document.getElementById('logFilter').value;
+  if (filter === 'all') return renderLogs(allLogs);
+  const filtered = allLogs.filter(l => l.toLowerCase().includes(filter));
+  renderLogs(filtered);
+}
+
+function clearTerminal() {
+  document.getElementById('terminalBody').innerHTML = `<div style="color: #6B7280;">Terminal cleared.</div>`;
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function runCommand() {
+  const input = document.getElementById('cmdInput');
+  const cmd = input.value.trim();
+  if (!cmd) return;
+  input.value = '';
+
+  const term = document.getElementById('terminalBody');
+  term.innerHTML += `\n<span style="color: #6366F1;">root@hkvm:~$</span> ${escHtml(cmd)}`;
+  
+  try {
+    const res = await fetch('/api/system/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd })
+    });
+    const data = await res.json();
+    if (data.stdout) term.innerHTML += `\n${escHtml(data.stdout)}`;
+    if (data.stderr) term.innerHTML += `\n<span class="log-error">${escHtml(data.stderr)}</span>`;
+    if (!res.ok) term.innerHTML += `\n<span class="log-error">${escHtml(data.error || 'Command failed')}</span>`;
+  } catch(e) {
+    term.innerHTML += `\n<span class="log-error">${escHtml(e.message)}</span>`;
+  }
+  term.scrollTop = term.scrollHeight;
+}
+
+// Auto-refresh every 5s
+refreshLogs();
+setInterval(refreshLogs, 5000);
+</script>
+</body>
+</html>

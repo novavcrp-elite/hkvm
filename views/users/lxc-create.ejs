@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create LXC Container - HKVM Panel</title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .create-page { max-width: 960px; margin: 0 auto; }
+    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-title .line { flex: 1; height: 1px; background: var(--border-subtle); }
+    .form-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+    .form-row { display: grid; gap: 16px; margin-bottom: 16px; }
+    .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-row.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-label .req { color: #EF4444; }
+    .form-control { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s; width: 100%; box-sizing: border-box; }
+    .form-control:focus { border-color: var(--accent-primary); }
+    .form-control::placeholder { color: var(--text-muted); }
+    .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .template-card { padding: 14px; border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; background: var(--bg-card); }
+    .template-card:hover { border-color: var(--accent-primary); transform: translateY(-1px); }
+    .template-card.selected { border-color: var(--accent-primary); background: rgba(99,102,241,0.08); box-shadow: 0 0 0 1px var(--accent-primary); }
+    .template-card .icon { font-size: 28px; margin-bottom: 6px; }
+    .template-card .name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .template-card .desc { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .resource-slider { display: flex; align-items: center; gap: 12px; }
+    .resource-slider input[type="range"] { flex: 1; accent-color: var(--accent-primary); }
+    .resource-value { min-width: 60px; text-align: right; font-size: 14px; font-weight: 700; color: var(--accent-primary); }
+    .node-card { padding: 14px; border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s; background: var(--bg-card); }
+    .node-card:hover { border-color: var(--accent-primary); }
+    .node-card.selected { border-color: var(--accent-primary); background: rgba(99,102,241,0.08); }
+    .node-card .node-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .node-card .node-info { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .create-actions { display: flex; gap: 12px; justify-content: flex-end; padding: 20px 0; }
+    .btn-create { padding: 12px 32px; font-size: 14px; font-weight: 700; }
+    .progress-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+    .progress-overlay.show { display: flex; }
+    .progress-card { background: var(--bg-card); border-radius: 16px; padding: 40px; text-align: center; min-width: 320px; }
+    .progress-card .spinner-lg { width: 48px; height: 48px; border: 4px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toggle-switch { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #374151; border-radius: 22px; transition: 0.3s; }
+    .toggle-slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent-primary); }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+    .feature-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; font-family: monospace; }
+  </style>
+</head>
+<body>
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content">
+      <div class="create-page">
+
+        <!-- Header -->
+        <div class="page-header" style="align-items: center;">
+          <div style="display: flex; align-items: center; gap: 14px; flex: 1;">
+            <a href="/lxc" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 13px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back
+            </a>
+            <div>
+              <h1 class="page-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Create LXC Container
+              </h1>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">Deploy a new lightweight Linux container</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="createForm" onsubmit="createLXC(event)">
+
+          <!-- Basic Info -->
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Basic Information
+            <div class="line"></div>
+          </div>
+          <div class="form-card">
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Container Name <span class="req">*</span></label>
+                <input type="text" class="form-control" name="name" placeholder="e.g., ubuntu-lxc-01" required id="nameInput">
+                <div class="form-hint">Unique name for this container</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hostname</label>
+                <input type="text" class="form-control" name="hostname" placeholder="Defaults to container name">
+              </div>
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Root Password</label>
+                <input type="text" class="form-control" name="password" value="password" id="passwordInput">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <input type="text" class="form-control" name="description" placeholder="Optional description">
+              </div>
+            </div>
+          </div>
+
+          <!-- OS Template -->
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Operating System
+            <div class="line"></div>
+          </div>
+          <div class="form-card">
+            <div class="template-grid" id="templateGrid">
+              <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading templates...</div>
+            </div>
+            <input type="hidden" name="template_key" id="selectedTemplate" required>
+          </div>
+
+          <!-- Resources -->
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            Resources
+            <div class="line"></div>
+          </div>
+          <div class="form-card">
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label class="form-label">CPU Cores</label>
+                <div class="resource-slider">
+                  <input type="range" min="1" max="32" value="2" id="cpuSlider" oninput="updateSlider('cpu')">
+                  <div class="resource-value" id="cpuValue">2 cores</div>
+                </div>
+                <input type="hidden" name="cpu_cores" value="2" id="cpuInput">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Memory</label>
+                <div class="resource-slider">
+                  <input type="range" min="128" max="16384" step="128" value="2048" id="memSlider" oninput="updateSlider('mem')">
+                  <div class="resource-value" id="memValue">2 GB</div>
+                </div>
+                <input type="hidden" name="memory" value="2048" id="memInput">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Swap</label>
+                <div class="resource-slider">
+                  <input type="range" min="0" max="16384" step="128" value="2048" id="swapSlider" oninput="updateSlider('swap')">
+                  <div class="resource-value" id="swapValue">2 GB</div>
+                </div>
+                <input type="hidden" name="swap" value="2048" id="swapInput">
+              </div>
+            </div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Disk Size</label>
+                <input type="text" class="form-control" name="disk_size" value="20G" placeholder="e.g., 20G">
+                <div class="form-hint">Supports G (GB) and M (MB)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Network -->
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Network
+            <div class="line"></div>
+          </div>
+          <div class="form-card">
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label">Network Type</label>
+                <select class="form-control" name="network_type" id="networkType" onchange="toggleStaticIP()">
+                  <option value="dhcp">DHCP (Automatic)</option>
+                  <option value="static">Static IP</option>
+                </select>
+              </div>
+              <div class="form-group" id="ipGroup" style="display: none;">
+                <label class="form-label">IPv4 Address</label>
+                <input type="text" class="form-control" name="ipv4_address" placeholder="e.g., 10.0.0.100">
+              </div>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Container Features
+            <div class="line"></div>
+          </div>
+          <div class="form-card">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+              <!-- Docker -->
+              <div class="feature-toggle" style="padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2496ED" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><line x1="6" y1="10" x2="6.01" y2="10"/><line x1="10" y1="10" x2="10.01" y2="10"/><line x1="14" y1="10" x2="14.01" y2="10"/><line x1="18" y1="10" x2="18.01" y2="10"/></svg>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Docker</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" name="enable_docker" value="1" onchange="toggleFeature('docker')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted);">Enable nested containers & Docker-in-LXC</div>
+                <div style="margin-top: 6px;">
+                  <span class="feature-badge" id="dockerBadge" style="display: none; background: rgba(36,150,237,0.1); color: #2496ED;">nesting=1</span>
+                </div>
+              </div>
+
+              <!-- KVM -->
+              <div class="feature-toggle" style="padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">KVM</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" name="enable_kvm" value="1" onchange="toggleFeature('kvm')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted);">Enable nested virtualization (QEMU inside LXC)</div>
+                <div style="margin-top: 6px;">
+                  <span class="feature-badge" id="kvmBadge" style="display: none; background: rgba(139,92,246,0.1); color: #8B5CF6;">nesting=1</span>
+                </div>
+              </div>
+
+              <!-- Dev/FUSE -->
+              <div class="feature-toggle" style="padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Dev/FUSE</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" name="enable_fuse" value="1" onchange="toggleFeature('fuse')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted);">Enable /dev/fuse for FUSE filesystem mounts</div>
+                <div style="margin-top: 6px;">
+                  <span class="feature-badge" id="fuseBadge" style="display: none; background: rgba(245,158,11,0.1); color: #F59E0B;">security.nesting=1</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Node Selection -->
+          <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+            Deployment Target
+            <div class="line"></div>
+          </div>
+          <div class="form-card">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;" id="nodeGrid">
+              <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading nodes...</div>
+            </div>
+            <input type="hidden" name="node_id" id="selectedNode" value="auto">
+          </div>
+
+          <!-- Actions -->
+          <div class="create-actions">
+            <a href="/lxc" class="btn btn-ghost" style="padding: 12px 24px;">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-create" id="submitBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              Create Container
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<!-- Progress Overlay -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-card">
+    <div class="spinner-lg"></div>
+    <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Creating Container...</div>
+    <div style="font-size: 13px; color: var(--text-muted);" id="progressText">Setting up your LXC container</div>
+  </div>
+</div>
+
+<script>
+let templates = [];
+let selectedTemplateKey = '';
+let selectedNodeId = 'auto';
+
+function toggleFeature(name) {
+  const badge = document.getElementById(name + 'Badge');
+  if (badge) badge.style.display = badge.style.display === 'none' ? '' : 'none';
+}
+
+function updateSlider(type) {
+  const slider = document.getElementById(type + 'Slider');
+  const input = document.getElementById(type + 'Input');
+  const value = document.getElementById(type + 'Value');
+  const val = parseInt(slider.value);
+  input.value = val;
+  if (type === 'cpu') {
+    value.textContent = val + ' core' + (val > 1 ? 's' : '');
+  } else {
+    value.textContent = val >= 1024 ? (val / 1024).toFixed(1).replace('.0', '') + ' GB' : val + ' MB';
+  }
+}
+
+function toggleStaticIP() {
+  const type = document.getElementById('networkType').value;
+  document.getElementById('ipGroup').style.display = type === 'static' ? '' : 'none';
+}
+
+function selectTemplate(key) {
+  selectedTemplateKey = key;
+  document.getElementById('selectedTemplate').value = key;
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  // Auto-fill defaults from template
+  const t = templates.find(t => t.template_key === key);
+  if (t) {
+    if (t.memory) { document.getElementById('memSlider').value = t.memory; updateSlider('mem'); }
+    if (t.cpus) { document.getElementById('cpuSlider').value = t.cpus; updateSlider('cpu'); }
+    if (t.disk_size) { document.querySelector('[name="disk_size"]').value = t.disk_size; }
+  }
+}
+
+function selectNode(id) {
+  selectedNodeId = id;
+  document.getElementById('selectedNode').value = id;
+  document.querySelectorAll('.node-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+async function loadData() {
+  try {
+    const [nodesRes, templatesRes] = await Promise.all([
+      fetch('/api/nodes/user/allowed'),
+      fetch('/api/lxc-templates')
+    ]);
+    const nodes = await nodesRes.json();
+    templates = await templatesRes.json();
+
+    // Render templates
+    const tg = document.getElementById('templateGrid');
+    if (Array.isArray(templates) && templates.length > 0) {
+      tg.innerHTML = templates.map(t => `
+        <div class="template-card" onclick="selectTemplate('${t.template_key}')">
+          <div class="icon">${t.icon || '📦'}</div>
+          <div class="name">${t.template_name}</div>
+          <div class="desc">${t.memory ? Math.round(t.memory/1024) + 'GB' : ''} ${t.disk_size || ''}</div>
+        </div>
+      `).join('');
+    } else {
+      tg.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--text-muted);">No templates available</div>';
+    }
+
+    // Render nodes
+    const ng = document.getElementById('nodeGrid');
+    let nodeHtml = `
+      <div class="node-card selected" onclick="selectNode('auto')" style="border-color: var(--accent-primary);">
+        <div class="node-name">⚡ Auto Select</div>
+        <div class="node-info">Best available node</div>
+      </div>
+    `;
+    if (Array.isArray(nodes)) {
+      nodes.forEach(n => {
+        nodeHtml += `
+          <div class="node-card" onclick="selectNode('${n.id}')">
+            <div class="node-name">${n.name}</div>
+            <div class="node-info">${n.location || n.hostname || ''}</div>
+          </div>
+        `;
+      });
+    }
+    ng.innerHTML = nodeHtml;
+
+  } catch(e) {
+    showToast('Failed to load data: ' + e.message, 'error');
+  }
+}
+
+async function createLXC(e) {
+  e.preventDefault();
+  if (!selectedTemplateKey) {
+    showToast('Please select an OS template', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  const overlay = document.getElementById('progressOverlay');
+  btn.disabled = true;
+  overlay.classList.add('show');
+
+  const form = new FormData(e.target);
+  const data = Object.fromEntries(form);
+  if (data.node_id === 'auto') delete data.node_id;
+  // Map feature toggles to LXD config
+  data.enable_docker = data.enable_docker === '1';
+  data.enable_kvm = data.enable_kvm === '1';
+  data.enable_fuse = data.enable_fuse === '1';
+
+  try {
+    const res = await fetch('/api/lxc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Failed to create');
+
+    document.getElementById('progressText').textContent = 'Container created successfully!';
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      window.location.href = `/lxc/${result.id}`;
+    }, 1500);
+  } catch(err) {
+    overlay.classList.remove('show');
+    showToast(err.message, 'error');
+    btn.disabled = false;
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

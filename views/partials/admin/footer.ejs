@@ -1,0 +1,201 @@
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Footer (minimal, inside page) -->
+<div style="padding: 16px 28px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 40px;">
+  <div style="font-size: 11px; color: var(--text-muted);">
+    HKVM Panel V1.0 · &copy; 2026 HopingBoyz · Powered by QEMU/KVM
+  </div>
+  <div style="display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--text-muted);">
+    <span id="footerTime"></span>
+    <span style="opacity: 0.3">|</span>
+    <span id="footerUptime" style="color: var(--accent-green);">⚡ Online</span>
+  </div>
+</div>
+
+<!-- Core JavaScript -->
+<script>
+// ============= TOAST SYSTEM =============
+window.showToast = function(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || icons.info}</span>
+    <span class="toast-message">${message}</span>
+    <span class="toast-close" onclick="this.parentElement.remove()">✕</span>
+  `;
+  
+  container.appendChild(toast);
+  toast.addEventListener('click', () => toast.remove());
+  
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.style.animation = 'fadeOut 0.3s ease forwards';
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, duration);
+};
+
+// ============= CONFIRM DIALOG =============
+window.confirmAction = function(message, title = 'Confirm Action') {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay show';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width: 380px;">
+        <div class="modal-header">
+          <div class="modal-title">⚠️ ${title}</div>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-secondary); font-size: 14px;">${message}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" id="confirmNo">Cancel</button>
+          <button class="btn btn-danger" id="confirmYes">Confirm</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    
+    overlay.querySelector('#confirmYes').addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      document.body.style.overflow = '';
+      resolve(true);
+    });
+    overlay.querySelector('#confirmNo').addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      document.body.style.overflow = '';
+      resolve(false);
+    });
+  });
+};
+
+// ============= CLOCK =============
+function updateFooterClock() {
+  const el = document.getElementById('footerTime');
+  if (el) {
+    const now = new Date();
+    el.textContent = now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+    });
+  }
+}
+updateFooterClock();
+setInterval(updateFooterClock, 1000);
+
+// ============= KEYBOARD SHORTCUTS =============
+document.addEventListener('keydown', (e) => {
+  // Ctrl+/ or ? to focus search
+  if ((e.ctrlKey && e.key === '/') || (e.key === '?' && !e.target.matches('input, textarea'))) {
+    e.preventDefault();
+    const search = document.getElementById('globalSearch');
+    if (search) search.focus();
+  }
+  // Escape to close modals
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.show').forEach(m => {
+      m.classList.remove('show');
+      document.body.style.overflow = '';
+    });
+    document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+  }
+  // Ctrl+H = Dashboard
+  if (e.ctrlKey && e.key === 'h') {
+    e.preventDefault();
+    window.location.href = '/admin/dashboard';
+  }
+  // Ctrl+N = New VM (admin)
+  if (e.ctrlKey && e.key === 'n') {
+    e.preventDefault();
+    window.location.href = '/admin/vm-create';
+  }
+});
+
+// ============= RIPPLE EFFECT =============
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn');
+  if (!btn || btn.disabled) return;
+  
+  const ripple = document.createElement('span');
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  
+  ripple.style.cssText = `
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: ${size}px; height: ${size}px;
+    left: ${e.clientX - rect.left - size/2}px;
+    top: ${e.clientY - rect.top - size/2}px;
+    background: rgba(255,255,255,0.15);
+    transform: scale(0);
+    animation: ripple 0.5s ease-out;
+  `;
+  
+  btn.style.position = 'relative';
+  btn.style.overflow = 'hidden';
+  btn.appendChild(ripple);
+  ripple.addEventListener('animationend', () => ripple.remove());
+});
+
+// ============= RESPONSIVE SIDEBAR AUTO-CLOSE =============
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    closeSidebar();
+  }
+});
+
+// ============= ANIMATE ON SCROLL =============
+if ('IntersectionObserver' in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animationPlayState = 'running';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  
+  document.querySelectorAll('.stat-card, .card, .vm-card').forEach(el => {
+    observer.observe(el);
+  });
+}
+
+// ============= GLOBAL API HELPERS =============
+window.apiCall = async function(url, method = 'GET', data = null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (data) opts.body = JSON.stringify(data);
+  
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Request failed');
+  }
+  return res.json();
+};
+
+// ============= VM STATUS COLOR HELPER =============
+window.getStatusClass = function(status) {
+  const map = { running: 'badge-running', stopped: 'badge-stopped', error: 'badge-error', pending: 'badge-pending' };
+  return map[status] || 'badge-stopped';
+};
+
+window.getStatusIcon = function(status) {
+  const map = { 
+    running: "<i class='fas fa-circle' style='color: #4CAF50;'></i>", 
+    stopped: "<i class='fas fa-circle' style='color: #808080;'></i>", 
+    error: "<i class='fas fa-circle' style='color: #F44336;'></i>", 
+    pending: "<i class='fas fa-circle' style='color: #FFC107;'></i>" 
+  };
+  return map[status] || "<i class='fas fa-circle' style='color: #808080;'></i>";
+};
+</script>
+
+
+

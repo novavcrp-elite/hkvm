@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Add Node - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+  <%- include('../partials/admin/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content">
+      <div class="page-header"><h1 class="page-title">Add Node</h1></div>
+      <div class="card" style="max-width:700px;">
+        <div class="card-body">
+          <form id="nodeForm" onsubmit="createNode(event)">
+            <div class="form-group"><label class="form-label">Node Type <span class="required">*</span></label>
+              <select class="form-control" name="api_type" id="apiType" onchange="onTypeChange()">
+                <option value="proxmox">Proxmox VE</option>
+                <option value="local-lxd">Local LXD (this machine)</option>
+                <option value="lxd">Remote LXD</option>
+                <option value="custom">Custom</option>
+              </select>
+              <small style="color:var(--text-muted);">Local LXD uses the LXD daemon on this machine (no API token needed)</small>
+            </div>
+            <div id="proxmoxFields">
+              <div class="form-group"><label class="form-label">Node Name <span class="required">*</span></label><input type="text" class="form-control" name="name" placeholder="e.g., PVE1" required></div>
+              <div class="form-group"><label class="form-label">Hostname / IP <span class="required">*</span></label><input type="text" class="form-control" name="hostname" placeholder="e.g., 192.168.1.100" required></div>
+              <div class="form-group"><label class="form-label">API URL <span class="required">*</span></label><input type="url" class="form-control" name="api_url" placeholder="https://192.168.1.100:8006" required></div>
+              <div class="form-group"><label class="form-label">API Token <span class="required">*</span></label><input type="password" class="form-control" name="api_token" placeholder="PVEAPIToken=..." required></div>
+            </div>
+            <div id="localLxdFields" style="display:none;">
+              <div class="form-group"><label class="form-label">Node Name</label><input type="text" class="form-control" name="local_name" value="Local LXD" readonly></div>
+              <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-control" name="local_description" value="Local LXD daemon on this machine" readonly></div>
+              <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:16px;">
+                <div style="font-size:13px;color:#10B981;font-weight:600;">Local LXD Mode</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Uses the LXD daemon installed on this machine. Supports Debian, Ubuntu, Alpine and other images via the images: remote.</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group"><label class="form-label">Location</label><input type="text" class="form-control" name="location" placeholder="e.g., India"></div>
+              <div class="form-group"><label class="form-label">Priority (1=highest)</label><input type="number" class="form-control" name="priority" value="5" min="1" max="10"></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <button type="submit" class="btn btn-primary" id="submitBtn">Add Node</button>
+              <a href="/admin/nodes" class="btn btn-ghost">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+<script>
+function onTypeChange(){
+  const type=document.getElementById('apiType').value;
+  const pf=document.getElementById('proxmoxFields');
+  const lf=document.getElementById('localLxdFields');
+  if(type==='local-lxd'){pf.style.display='none';lf.style.display='block';}
+  else{pf.style.display='block';lf.style.display='none';}
+  // Update placeholders
+  const nameInput=document.querySelector('[name=name]');
+  const hostInput=document.querySelector('[name=hostname]');
+  const apiUrlInput=document.querySelector('[name=api_url]');
+  const tokenInput=document.querySelector('[name=api_token]');
+  if(type==='proxmox'){nameInput.placeholder='e.g., PVE1';hostInput.placeholder='e.g., 192.168.1.100';apiUrlInput.placeholder='https://192.168.1.100:8006';tokenInput.placeholder='PVEAPIToken=...';}
+  else if(type==='lxd'){nameInput.placeholder='e.g., LXD-Remote';hostInput.placeholder='e.g., 192.168.1.200';apiUrlInput.placeholder='https://192.168.1.200:8443';tokenInput.placeholder='LXD Token...';}
+  else if(type==='custom'){nameInput.placeholder='e.g., Custom-Node';hostInput.placeholder='e.g., 192.168.1.100';apiUrlInput.placeholder='https://...';tokenInput.placeholder='Token...';}
+}
+async function createNode(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Adding...';
+  const form=new FormData(e.target);
+  const data=Object.fromEntries(form);
+  const apiType=data.api_type;
+  if(apiType==='local-lxd'){
+    data.name='Local LXD';data.hostname='localhost';data.api_url='unix:///var/lib/lxd/unix.socket';data.api_token='';data.api_port=0;
+    data.description='Local LXD daemon on this machine';data.enabled=true;
+  }else{
+    if(!data.name||!data.hostname||!data.api_url){btn.disabled=false;btn.textContent='Add Node';showToast('Name, Hostname, and API URL are required','error');return;}
+    data.enabled=true;
+  }
+  try{
+    const res=await fetch('/api/nodes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const result=await res.json();
+    if(!res.ok)throw new Error(result.error||'Failed');
+    showToast('Node added successfully!','success');
+    setTimeout(()=>window.location.href='/admin/nodes',1000);
+  }catch(err){showToast(err.message,'error');btn.disabled=false;btn.textContent='Add Node';}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'tmate SSH Access - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- SVG ICON SPRITE -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content" id="pageContent">
+      <div style="text-align: center; padding: 80px;">
+        <div class="spinner spinner-lg" style="margin: 0 auto 16px;"></div>
+        <div style="color: var(--text-muted);">Loading tmate session...</div>
+      </div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+const vmId = <%= vmId %>;
+
+function svg(id, size = 14) {
+  return `<svg width="${size}" height="${size}"><use href="#${id}"/></svg>`;
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function loadPage() {
+  try {
+    // Fetch VM details
+    const vmRes = await fetch(`/api/vms/${vmId}`);
+    if (!vmRes.ok) throw new Error('VM not found');
+    const vm = await vmRes.json();
+    renderPage(vm);
+  } catch(e) {
+    document.getElementById('pageContent').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon" style="color:#EF4444;">${svg('i-x', 48)}</div>
+        <div class="empty-state-title">VM Not Found</div>
+        <div class="empty-state-desc">${escHtml(e.message)}</div>
+        <a href="/vm/${vmId}" class="btn btn-primary">${svg('i-back', 13)} Back to VM</a>
+      </div>`;
+  }
+}
+
+function renderPage(vm) {
+  const isRunning = vm.status === 'running';
+  document.getElementById('pageContent').innerHTML = `
+    <div class="page-header" style="align-items:center;">
+      <div style="display: flex; align-items: center; gap: 14px; flex: 1;">
+        <a href="/vm/${vmId}" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 13px;">
+          ${svg('i-back', 14)} Back
+        </a>
+        <div>
+          <h1 class="page-title">${svg('i-terminal', 18)} tmate SSH Access</h1>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+            VM: ${escHtml(vm.vm_name)} (ID: #${vm.vm_id}) · ${vm.status.toUpperCase()}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- tmate Session Card -->
+    <div class="card" style="margin-bottom: 20px;">
+      <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${svg('i-shield', 16)}
+          <span style="font-weight: 700; font-size: 14px;">tmate SSH Access</span>
+        </div>
+        <div id="sessionStatus" style="font-size: 12px; color: var(--text-muted);">No active session</div>
+      </div>
+      <div class="card-body">
+        ${!isRunning ? `
+          <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">VM is not running</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Start the VM first to generate a tmate session</div>
+            <a href="/vm/${vmId}" class="btn btn-primary">Go to VM</a>
+          </div>
+        ` : `
+          <div id="sessionArea">
+            <!-- Generate Button -->
+            <div id="generateSection" style="text-align: center; padding: 40px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🔗</div>
+              <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Generate Remote SSH Access</div>
+              <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Creates a temporary tmate session for SSH access from anywhere</div>
+              <button class="btn btn-primary" onclick="generateSession()" id="generateBtn">
+                ${svg('i-terminal', 14)} Generate tmate Session
+              </button>
+            </div>
+
+            <!-- Active Session Display (hidden by default) -->
+            <div id="activeSession" style="display: none;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                <span class="badge badge-running"><span class="dot"></span> Active</span>
+                <span style="font-size: 12px; color: var(--text-muted);" id="expiresAt"></span>
+              </div>
+
+              <!-- SSH Command -->
+              <div style="margin-bottom: 16px;">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent-primary); margin-bottom: 8px;">SSH Connection</div>
+                <div class="code-block" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font-family: monospace;">
+                  <code id="sshCommand" style="word-break: break-all; font-size: 12px; color: var(--accent-green);"></code>
+                  <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('sshCommand')" style="flex-shrink: 0; margin-left: 10px;">
+                    ${svg('i-copy', 13)} Copy
+                  </button>
+                </div>
+              </div>
+
+              <!-- Read-only Command (if available) -->
+              <div id="readonlySection" style="display: none; margin-bottom: 16px;">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #F59E0B; margin-bottom: 8px;">Read-Only Connection</div>
+                <div class="code-block" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font-family: monospace;">
+                  <code id="readonlyCommand" style="word-break: break-all; font-size: 12px; color: var(--accent-green);"></code>
+                  <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('readonlyCommand')" style="flex-shrink: 0; margin-left: 10px;">
+                    ${svg('i-copy', 13)} Copy
+                  </button>
+                </div>
+              </div>
+
+              <!-- Countdown -->
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                ${svg('i-clock', 14)}
+                <span style="font-size: 13px; color: var(--text-muted);">Expires in: <span id="countdown" style="color: var(--accent-primary); font-weight: 600;"></span></span>
+              </div>
+
+              <!-- Actions -->
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="generateSession()">
+                  ${svg('i-terminal', 14)} Regenerate
+                </button>
+                <button class="btn btn-danger" onclick="revokeSession()">
+                  ${svg('i-x', 14)} Revoke Session
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Previous Sessions -->
+          <div id="previousSessions" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 12px;">Previous Sessions</div>
+            <div id="sessionHistory" style="font-size: 13px; color: var(--text-muted);">Loading...</div>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+
+  // Load active sessions
+  if (isRunning) loadSessions();
+}
+
+let currentSessionId = null;
+let countdownInterval = null;
+let sessionExpiresAt = null;
+
+async function generateSession() {
+  const btn = document.getElementById('generateBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;"></span> Generating...`;
+  }
+
+  try {
+    const res = await fetch(`/api/tmate/${vmId}/generate`, { method: 'POST' });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Failed to generate session');
+
+    if (data.session) {
+      showActiveSession(data.session);
+    } else {
+      throw new Error('No session data returned');
+    }
+  } catch(e) {
+    // Show error inline in the card
+    const area = document.getElementById('generateSection') || document.getElementById('sessionArea');
+    if (area) {
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 14px; margin-top: 16px; font-size: 13px; color: #EF4444;';
+      errorDiv.textContent = e.message;
+      // Remove previous error if any
+      const prevError = area.querySelector('.tmate-error');
+      if (prevError) prevError.remove();
+      errorDiv.className = 'tmate-error';
+      area.appendChild(errorDiv);
+    }
+    if (typeof showToast === 'function') showToast(e.message, 'error');
+    else alert(e.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `${svg('i-terminal', 14)} Generate tmate Session`;
+    }
+  }
+}
+
+function showActiveSession(session) {
+  currentSessionId = session.id;
+  sessionExpiresAt = new Date(session.expires_at).getTime();
+
+  const genSection = document.getElementById('generateSection');
+  const activeSection = document.getElementById('activeSession');
+  const statusEl = document.getElementById('sessionStatus');
+
+  if (genSection) genSection.style.display = 'none';
+  if (activeSection) activeSection.style.display = 'block';
+  if (statusEl) {
+    statusEl.innerHTML = `<span style="color: var(--accent-green);">● Active</span>`;
+  }
+
+  document.getElementById('sshCommand').textContent = session.ssh_command || 'N/A';
+
+  if (session.readonly_command) {
+    const roSection = document.getElementById('readonlySection');
+    if (roSection) roSection.style.display = 'block';
+    document.getElementById('readonlyCommand').textContent = session.readonly_command;
+  }
+
+  if (session.expires_at) {
+    document.getElementById('expiresAt').textContent = `Expires: ${new Date(session.expires_at).toLocaleString()}`;
+  }
+
+  // Start countdown
+  startCountdown();
+}
+
+function startCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    const remaining = sessionExpiresAt - Date.now();
+    if (remaining <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById('countdown').textContent = 'Expired';
+      return;
+    }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    document.getElementById('countdown').textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+  }, 1000);
+}
+
+async function revokeSession() {
+  if (!currentSessionId) return;
+  if (!confirm('Revoke this tmate session?')) return;
+
+  try {
+    const res = await fetch(`/api/tmate/${currentSessionId}/revoke`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    currentSessionId = null;
+    if (countdownInterval) clearInterval(countdownInterval);
+    loadPage();
+    if (typeof showToast === 'function') showToast('Session revoked', 'success');
+  } catch(e) {
+    if (typeof showToast === 'function') showToast(e.message, 'error');
+  }
+}
+
+async function loadSessions() {
+  try {
+    const res = await fetch(`/api/tmate/${vmId}/sessions`);
+    const sessions = await res.json();
+    const el = document.getElementById('sessionHistory');
+
+    if (!sessions || sessions.length === 0) {
+      el.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">No previous sessions</div>';
+      return;
+    }
+
+    el.innerHTML = sessions.map(s => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="badge ${s.status === 'active' ? 'badge-running' : s.status === 'revoked' ? 'badge-error' : 'badge-stopped'}" style="font-size: 10px;">${s.status}</span>
+          <span style="font-size: 12px;">${new Date(s.created_at).toLocaleString()}</span>
+        </div>
+        ${s.expires_at ? `<span style="font-size: 11px; color: var(--text-muted);">Expires: ${new Date(s.expires_at).toLocaleString()}</span>` : ''}
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+function copyToClipboard(elementId) {
+  const text = document.getElementById(elementId).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    if (typeof showToast === 'function') showToast('Copied to clipboard', 'success');
+  });
+}
+
+// Initialize
+loadPage();
+</script>
+</body>
+</html>

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        /* Page Layout */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-content { flex: 1; }
+
+        .header-title {
+            margin-bottom: 8px;
+        }
+
+        .header-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 4px 0 0 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-color-hover);
+            color: var(--text-primary);
+            transform: translateX(-2px);
+        }
+
+        /* Two Column Layout */
+        .form-wrapper {
+            max-width: 1200px;
+        }
+
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+        }
+
+        .form-intro {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 32px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .intro-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .intro-content {
+            flex: 1;
+        }
+
+        .intro-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .intro-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .readonly-badge {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #6366F1;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Two Column Sections */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .form-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-icon {
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .required {
+            color: var(--accent-red);
+            font-weight: 700;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 11px 13px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: var(--shadow-focus);
+            background: var(--bg-input);
+        }
+
+        .form-control:disabled {
+            background: var(--bg-disabled);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 90px;
+            font-family: inherit;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: block;
+            line-height: 1.5;
+        }
+
+        /* Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        /* Icon Picker */
+        .icon-picker {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .icon-input-wrapper {
+            flex: 1;
+        }
+
+        .icon-preview {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+            transition: all var(--transition-fast);
+            overflow: hidden;
+        }
+
+        .icon-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+        }
+
+        .form-control:focus ~ .icon-preview,
+        .icon-picker:focus-within .icon-preview {
+            border-color: var(--border-focus);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 13px;
+            animation: slideDown 0.3s var(--ease-out);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .alert-info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #6366F1;
+        }
+
+        .alert-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .alert-content {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .form-actions .btn {
+            padding: 11px 22px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .info-box-icon {
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* Mobile Responsive - Tablet */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column-reverse;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions .back-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .two-column-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .column {
+                gap: 20px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .form-grid,
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+
+            .icon-picker {
+                flex-direction: column;
+            }
+
+            .icon-preview {
+                width: 100%;
+                height: 80px;
+            }
+
+            .form-intro {
+                flex-direction: column;
+            }
+        }
+
+        /* Mobile Responsive - Phone */
+        @media (max-width: 480px) {
+            .header-title h1 {
+                font-size: 24px;
+            }
+
+            .form-card {
+                padding: 16px;
+            }
+
+            .form-section {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/sidebar') %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin/header') %>
+        
+        <main class="admin-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <div class="header-title">
+                        <h1><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 8px; color: #6366F1; vertical-align: middle;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19H4v-3L16.5 3.5z"></path></svg>View Template<% if (isBuiltin) { %><span class="readonly-badge">Built-in • Read-only</span><% } %></h1>
+                        <p>View template details and settings</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <a href="/admin/templates" class="back-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back to Templates
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <% if (isBuiltin) { %>
+                <div class="alert alert-info">
+                    <div class="alert-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                    <div class="alert-content">This is a built-in template and cannot be edited. All fields are read-only for reference.</div>
+                </div>
+            <% } %>
+
+            <!-- Form -->
+            <div class="form-wrapper">
+                <div class="form-card">
+                    <!-- Intro -->
+                    <div class="form-intro">
+                        <div class="intro-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366F1;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+                        <div class="intro-content">
+                            <div class="intro-title">Template Information</div>
+                            <div class="intro-text">
+                                This page displays the details of the selected template. <% if (isBuiltin) { %>Built-in templates are provided by the system and cannot be modified.<% } else { %>You can update custom template settings from this view.<% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <form id="editTemplateForm" onsubmit="return false;">
+                        <!-- Two Column Layout -->
+                        <div class="two-column-layout">
+                            <!-- Left Column -->
+                            <div class="column">
+                                <!-- Template Basics Section -->
+                                <div class="form-section">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366F1;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V10z"></path><polyline points="14 2 14 10 22 10"></polyline></svg></div>
+                                        <h2 class="section-title">Template Information</h2>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            Template Name
+                                            <span class="required">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="templateName" disabled>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" id="templateDesc" disabled></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Template Icon / Image</label>
+                                        <div class="icon-picker">
+                                            <div class="icon-input-wrapper">
+                                                <input type="text" class="form-control" id="templateIcon" disabled>
+                                            </div>
+                                            <div class="icon-preview" id="iconPreview">📦</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Download Source Section -->
+                                <div class="form-section">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #06B6D4;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                                        <h2 class="section-title">Download Source</h2>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Download URL</label>
+                                        <input type="url" class="form-control" id="templateURL" disabled>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="column">
+                                <!-- Default Resources Section -->
+                                <div class="form-section">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #F59E0B;"><circle cx="12" cy="12" r="1"></circle><path d="M12 1v6m0 6v6"></path><path d="M4.22 4.22l4.24 4.24m2.08 2.08l4.24 4.24"></path><path d="M1 12h6m6 0h6"></path><path d="M4.22 19.78l4.24-4.24m2.08-2.08l4.24-4.24"></path></svg></div>
+                                        <h2 class="section-title">Default Resources</h2>
+                                    </div>
+
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label class="form-label">Template Type</label>
+                                            <select class="form-control" id="templateType" disabled>
+                                                <option value="cloud-init">Cloud-Init (Auto-provisioning)</option>
+                                                <option value="iso">ISO Installer (Manual Install)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Memory (MB)</label>
+                                            <input type="number" class="form-control" id="templateMemory" disabled>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">vCPUs</label>
+                                            <input type="number" class="form-control" id="templateCPUs" disabled>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Disk Size</label>
+                                            <input type="text" class="form-control" id="templateDiskSize" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Default Credentials Section -->
+                                <div class="form-section" id="credentialsSection">
+                                    <div class="section-header">
+                                        <div class="section-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #EF4444;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"></path></svg></div>
+                                        <h2 class="section-title">Default Credentials</h2>
+                                    </div>
+
+                                    <div class="form-grid-2">
+                                        <div class="form-group">
+                                            <label class="form-label">Default Username</label>
+                                            <input type="text" class="form-control" id="templateUser" disabled>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Default Password</label>
+                                            <input type="text" class="form-control" id="templatePass" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <a href="/admin/templates" class="btn btn-ghost">Back to Templates</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <%- include('../partials/admin/footer') %>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <script>
+        const isBuiltin = <%- JSON.stringify(isBuiltin || false) %>;
+        const templateData = <%- JSON.stringify(template || {}) %>;
+
+        function updateIconPreview() {
+            const value = document.getElementById('templateIcon').value.trim();
+            const preview = document.getElementById('iconPreview');
+            
+            if (!value) {
+                preview.innerHTML = '📦';
+                return;
+            }
+
+            if (value.startsWith('http://') || value.startsWith('https://')) {
+                preview.innerHTML = `<img src="${value}" alt="Template icon" onerror="this.parentElement.innerHTML='❌';">`;
+            } else {
+                preview.innerHTML = value.substring(0, 2);
+            }
+        }
+
+        function populateForm() {
+            if (!templateData || Object.keys(templateData).length === 0) {
+                console.error('No template data found');
+                return;
+            }
+
+            console.log('[DEBUG] Loading template:', templateData);
+            
+            // Populate all fields with template data
+            document.getElementById('templateName').value = templateData.template_name || '';
+            document.getElementById('templateDesc').value = templateData.description || '';
+            document.getElementById('templateIcon').value = templateData.icon || '📦';
+            document.getElementById('templateMemory').value = templateData.memory || 2048;
+            document.getElementById('templateCPUs').value = templateData.cpus || 2;
+            document.getElementById('templateDiskSize').value = templateData.disk_size || '20G';
+            document.getElementById('templateType').value = templateData.template_type || 'cloud-init';
+            document.getElementById('templateURL').value = templateData.download_url || '';
+            document.getElementById('templateUser').value = templateData.username || '';
+            document.getElementById('templatePass').value = templateData.password || '';
+
+            updateIconPreview();
+        }
+
+        // Initialize - form loads as read-only by default
+        document.addEventListener('DOMContentLoaded', () => {
+            populateForm();
+        });
+    </script>
+</body>
+</html>

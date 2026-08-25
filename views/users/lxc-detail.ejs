@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'LXC Container - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png"><link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+    <div class="admin-content" id="pageContent">
+      <div style="text-align:center;padding:80px;"><div class="spinner spinner-lg" style="margin:0 auto 16px;"></div></div>
+    </div>
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+<!-- tmate Modal -->
+<div class="modal-overlay" id="tmateModal"><div class="modal"><div class="modal-header"><div class="modal-title">tmate SSH Access</div><button class="modal-close" onclick="closeModal('tmateModal')">✕</button></div>
+  <div class="modal-body" id="tmateBody"><div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto 12px;"></div>Generating tmate session...</div></div></div></div>
+<script>
+const cid=<%= containerId %>;
+function svg(id,s=14){return `<svg width="${s}" height="${s}"><use href="#${id}"/></svg>`;}
+function closeModal(id){document.getElementById(id).classList.remove('show');document.body.style.overflow='';}
+async function loadPage(){
+  try{
+    const res=await fetch(`/api/lxc/${cid}`);
+    if(!res.ok)throw new Error('Container not found');
+    const c=await res.json();
+    renderPage(c);
+  }catch(e){document.getElementById('pageContent').innerHTML=`<div class="empty-state"><div class="empty-state-title">Container Not Found</div><a href="/lxc" class="btn btn-primary">Back to Containers</a></div>`;}
+}
+function renderPage(c){
+  document.getElementById('pageContent').innerHTML=`
+    <div class="page-header"><div style="display:flex;align-items:center;gap:14px;">
+      <a href="/lxc" style="color:var(--text-muted);text-decoration:none;font-size:13px;">${svg('i-back',14)} Back</a>
+      <div><h1 class="page-title">${svg('i-server',18)} ${c.name}</h1>
+        <p style="font-size:12px;color:var(--text-muted);">LXC • ${c.node_name||'N/A'} • #${c.id}</p></div>
+    </div>
+      <div class="page-actions">
+        <span class="badge ${c.status==='running'?'badge-running':'badge-stopped'}"><span class="dot"></span> ${c.status.toUpperCase()}</span>
+        ${c.status==='running'?`
+          <button class="btn btn-warning btn-sm" onclick="action('stop')">Stop</button>
+          <button class="btn btn-ghost btn-sm" onclick="action('restart')">Restart</button>
+          <button class="btn btn-ghost btn-sm" onclick="action('shutdown')">Shutdown</button>
+          <button class="btn btn-ghost btn-sm" onclick="action('reboot')">Reboot</button>
+        `:`<button class="btn btn-success btn-sm" onclick="action('start')">Start</button>`}
+        <button class="btn btn-outline btn-sm" onclick="showTmate()">tmate SSH</button>
+      </div>
+    </div>
+    <div class="stats-grid" style="margin-bottom:20px;">
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${c.cpu_cores}</div><div style="font-size:11px;color:var(--text-muted);">CPU Cores</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${(c.memory/1024).toFixed(1)} GB</div><div style="font-size:11px;color:var(--text-muted);">RAM</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${c.disk_size}</div><div style="font-size:11px;color:var(--text-muted);">Disk</div></div>
+      <div class="stat-card" style="padding:16px;"><div style="font-size:20px;font-weight:800;">${c.ipv4_address||'DHCP'}</div><div style="font-size:11px;color:var(--text-muted);">IPv4</div></div>
+    </div>
+    <div class="card"><div class="card-header"><div style="font-weight:700;font-size:14px;">Details</div></div>
+      <div class="card-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        ${infoRow('Name',c.name)}${infoRow('Hostname',c.hostname)}${infoRow('OS/Template',c.os_type||c.template_key||'N/A')}
+        ${infoRow('Node',c.node_name||'N/A')}${infoRow('Username',c.username)}${infoRow('SSH Port',c.ssh_port)}
+        ${infoRow('Network',c.network_type)}${infoRow('Bridge',c.bridge)}${infoRow('Swap',(c.swap/1024).toFixed(1)+' GB')}
+        ${infoRow('Unprivileged',c.unprivileged?'Yes':'No')}${infoRow('Created',c.created_at?new Date(c.created_at).toLocaleString():'N/A')}
+      </div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-danger" onclick="deleteContainer()">Delete Container</button>
+    </div>`;
+}
+function infoRow(label,value){return `<div style="font-size:13px;"><span style="color:var(--text-muted);">${label}:</span> <strong>${value||'N/A'}</strong></div>`;}
+async function action(act){
+  try{const r=await fetch(`/api/lxc/${cid}/${act}`,{method:'POST'});const d=await r.json();if(!r.ok)throw new Error(d.error);showToast(d.message||'Success','success');setTimeout(loadPage,1500);}catch(e){showToast(e.message,'error');}
+}
+async function showTmate(){
+  document.getElementById('tmateModal').classList.add('show');
+  document.getElementById('tmateBody').innerHTML='<div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto 12px;"></div>Generating tmate session...</div>';
+  try{
+    const r=await fetch(`/api/lxc/${cid}/tmate`,{method:'POST'});const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    document.getElementById('tmateBody').innerHTML=`
+      <div style="margin-bottom:16px;"><span class="badge badge-running"><span class="dot"></span> Active</span></div>
+      <div style="margin-bottom:12px;"><div style="font-size:11px;text-transform:uppercase;color:var(--accent-primary);margin-bottom:6px;">SSH Command</div>
+        <div class="code-block" style="display:flex;align-items:center;justify-content:space-between;padding:10px;font-family:monospace;">
+          <code style="word-break:break-all;font-size:12px;color:var(--accent-green);">${d.sshCommand||'N/A'}</code>
+          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${(d.sshCommand||'').replace(/'/g,"\\'")}');showToast('Copied!','success')">Copy</button>
+        </div></div>
+      ${d.readonlyCommand?`<div style="margin-bottom:12px;"><div style="font-size:11px;text-transform:uppercase;color:#F59E0B;margin-bottom:6px;">Read-Only</div>
+        <div class="code-block" style="display:flex;align-items:center;justify-content:space-between;padding:10px;font-family:monospace;">
+          <code style="word-break:break-all;font-size:12px;">${d.readonlyCommand}</code>
+          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${(d.readonlyCommand||'').replace(/'/g,"\\'")}');showToast('Copied!','success')">Copy</button>
+        </div></div>`:''}
+      <div style="font-size:12px;color:var(--text-muted);">Expires in: ${Math.floor(d.expires_in/60)} minutes</div>`;
+  }catch(e){document.getElementById('tmateBody').innerHTML=`<div style="text-align:center;padding:20px;color:#EF4444;">${e.message}</div>`;}
+}
+async function deleteContainer(){if(!confirm('Delete this container permanently?'))return;try{await fetch(`/api/lxc/${cid}`,{method:'DELETE'});showToast('Container deleted','success');window.location.href='/lxc';}catch(e){showToast(e.message,'error');}}
+loadPage();
+</script>
+</body>
+</html>

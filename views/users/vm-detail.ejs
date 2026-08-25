@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'VM Details - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- ============ SVG ICON SPRITE ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+    <symbol id="i-ssh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-4h14v4"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-unlink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M5.17 11.75l-1.72 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/></symbol>
+    <symbol id="i-attach" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content" id="pageContent">
+      <div style="text-align: center; padding: 80px;">
+        <div class="spinner spinner-lg" style="margin: 0 auto 16px;"></div>
+        <div style="color: var(--text-muted);">Loading VM details...</div>
+      </div>
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<!-- Snapshot Modal -->
+<div class="modal-overlay" id="snapshotModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;">
+        <span style="color:#8B5CF6;display:inline-flex;"><svg width="18" height="18"><use href="#i-camera"/></svg></span>
+        Create Snapshot
+      </div>
+      <button class="modal-close" onclick="closeModal('snapshotModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Snapshot Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="snapshotName" placeholder="e.g., before-update-2025">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" id="snapshotDesc" placeholder="Optional description..." rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('snapshotModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createSnapshot()">
+        <svg width="14" height="14" style="margin-right:6px;"><use href="#i-camera"/></svg>
+        Create Snapshot
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reinstall Modal -->
+<div class="modal-overlay" id="reinstallModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;">
+        <span style="color:#F59E0B;display:inline-flex;"><svg width="18" height="18"><use href="#i-refresh"/></svg></span>
+        Reinstall VM
+      </div>
+      <button class="modal-close" onclick="closeModal('reinstallModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-warning" style="margin-bottom: 16px;">
+        <span class="alert-icon" style="color:#F59E0B;display:inline-flex;"><svg width="16" height="16"><use href="#i-alert"/></svg></span>
+        <span><strong>Warning!</strong> This will delete the VM disk and cloud-init seed. Logs will be kept for audit trail.</span>
+      </div>
+      
+      <form id="reinstallForm" onsubmit="performReinstall(event)">
+        <div class="form-group">
+          <label class="form-label" style="font-weight: 600;">Select OS Template <span class="required">*</span></label>
+          <select class="form-control" name="new_os_template" id="reinstall_template" required style="margin-bottom: 12px;">
+            <option value="">— Choose Template —</option>
+          </select>
+          <div class="form-hint" style="color: var(--text-muted);">Select a new OS to reinstall. Keep current or choose different.</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" style="font-weight: 600;">New Username (Optional)</label>
+          <input type="text" class="form-control" name="new_username" id="reinstall_username" placeholder="Leave blank to keep current">
+          <div class="form-hint">Default user for cloud-init templates (ubuntu, debian, root, etc.)</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" style="font-weight: 600;">New Password (Optional)</label>
+          <input type="password" class="form-control" name="new_password" id="reinstall_password" placeholder="Leave blank to keep current">
+          <div class="form-hint">SSH password for the new installation</div>
+        </div>
+        
+        <label class="toggle-switch" style="margin: 16px 0;">
+          <input type="checkbox" class="toggle-input" name="confirm" id="reinstall_confirm" required>
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          <div>
+            <div class="toggle-label" style="font-size: 13px; color: var(--text-primary);">I understand this will delete all VM data</div>
+          </div>
+        </label>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reinstallModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmReinstallBtn" onclick="document.getElementById('reinstallForm').dispatchEvent(new Event('submit'))">
+        <svg width="14" height="14" style="margin-right:6px;"><use href="#i-refresh"/></svg>
+        Reinstall
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ISO Attach Modal -->
+<div class="modal-overlay" id="isoAttachModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;">
+        <span style="color:#06B6D4;display:inline-flex;"><svg width="18" height="18"><use href="#i-disc"/></svg></span>
+        Attach ISO to VM
+      </div>
+      <button class="modal-close" onclick="closeModal('isoAttachModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="margin-bottom: 16px;">
+        <span class="alert-icon" style="color:#3B82F6;display:inline-flex;"><svg width="16" height="16"><use href="#i-info"/></svg></span>
+        <span><strong>ISO Boot:</strong> VM will boot from this ISO. After OS installation completes, detach the ISO to boot from disk.</span>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" style="font-weight: 600;">Select ISO File <span class="required">*</span></label>
+        <select class="form-control" id="isoFileSelect" required>
+          <option value="">— Loading ISO files... —</option>
+        </select>
+        <div class="form-hint" style="color: var(--text-muted); margin-top: 8px;">
+          Choose an ISO file to attach. Upload new ISOs to <code>/home/user/vms/iso/</code>
+        </div>
+      </div>
+      
+      <div class="alert alert-warning" style="margin-top: 16px;">
+        <span class="alert-icon" style="color:#F59E0B;display:inline-flex;"><svg width="16" height="16"><use href="#i-alert"/></svg></span>
+        <span><strong>Note:</strong> You may need to restart the VM to boot from the attached ISO.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('isoAttachModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="performISOAttach()">
+        <svg width="14" height="14" style="margin-right:6px;"><use href="#i-attach"/></svg>
+        Attach ISO
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const vmId = <%= vmId %>;
+let vmData = null;
+let statsInterval = null;
+
+// SVG helper for dynamic contexts
+function svg(id, size = 14) {
+  return `<svg width="${size}" height="${size}"><use href="#${id}"/></svg>`;
+}
+
+async function loadVM() {
+  try {
+    const [vmRes, statsRes] = await Promise.all([
+      fetch(`/api/vms/${vmId}`),
+      fetch(`/api/vms/${vmId}/stats`).catch(() => null)
+    ]);
+
+    if (!vmRes.ok) throw new Error('VM not found');
+    vmData = await vmRes.json();
+    const stats = statsRes && statsRes.ok ? await statsRes.json() : null;
+    
+    renderPage(vmData, stats);
+    setTimeout(() => loadISOStatus(), 400);
+  } catch(e) {
+    document.getElementById('pageContent').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon" style="color:#EF4444;">${svg('i-alert', 48)}</div>
+        <div class="empty-state-title">VM Not Found</div>
+        <div class="empty-state-desc">${escHtml(e.message)}</div>
+        <a href="/vms" class="btn btn-primary">${svg('i-back', 13)} Back to VMs</a>
+      </div>`;
+  }
+}
+
+function renderPage(vm, stats) {
+  const statusCls = vm.status === 'running' ? 'badge-running' : vm.status === 'error' ? 'badge-error' : 'badge-stopped';
+  const isRunning = vm.status === 'running';
+  const icon = vm.template_icon;
+  const displayIcon = (icon && icon.startsWith('http')) ? icon : 'https://i.imgur.com/wu0Ob6B.png';
+  
+  document.getElementById('pageContent').innerHTML = `
+    <!-- Page Header -->
+    <div class="page-header" style="align-items:center;">
+      <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
+        <a href="/vms" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; flex-shrink: 0;">
+          ${svg('i-back', 14)}
+          Back
+        </a>
+        <div style="min-width: 0; flex: 1; display: flex; align-items: center; gap: 12px;">
+          <img src="${displayIcon}" alt="OS" style="width: 40px; height: 40px; object-fit: contain; border-radius: 10px; padding:6px; background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06)); border:1px solid rgba(99,102,241,0.2);" onerror="this.src='https://i.imgur.com/wu0Ob6B.png';">
+          <div style="min-width: 0; flex: 1;">
+            <h1 class="page-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin:0;">
+              ${escHtml(vm.vm_name)}
+            </h1>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="background:rgba(99,102,241,0.1); color:#6366F1; padding:2px 8px; border-radius:5px; font-family:monospace; font-weight:600;">#${vm.vm_id}</span>
+              <span>${escHtml(vm.template_name || vm.os_type || 'Custom OS')}</span>
+              <span style="opacity:0.6;">·</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;">${svg('i-server', 11)} ${vm.node_name || 'localhost'}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="page-actions" style="align-items:center;">
+        <span class="badge ${statusCls}" style="padding: 5px 12px; font-size: 12px;">
+          <span class="dot"></span> ${vm.status.toUpperCase()}
+        </span>
+        ${isRunning
+          ? `<button class="btn btn-warning btn-sm" onclick="doAction('stop')">${svg('i-stop', 12)} Stop</button>
+             <button class="btn btn-ghost btn-sm" onclick="doAction('restart')">${svg('i-restart', 12)} Restart</button>`
+          : `<button class="btn btn-success btn-sm" onclick="doAction('start')">${svg('i-play', 12)} Start</button>`
+        }
+        <a href="/vm/${vmId}/console" class="btn btn-outline btn-sm">${svg('i-terminal', 13)} Console</a>
+        <a href="/vm/${vmId}/ssh" class="btn btn-outline btn-sm" title="SSH Terminal">${svg('i-ssh', 13)} SSH</a>
+        <a href="/vm/${vmId}/tmate" class="btn btn-outline btn-sm" title="tmate SSH Access" style="color: #8B5CF6; border-color: rgba(139,92,246,0.3);">${svg('i-link', 13)} tmate SSH</a>
+        <a href="/vm/${vmId}/novnc" class="btn btn-outline btn-sm" title="NoVNC Web Console" style="color: #06B6D4; border-color: rgba(6,182,212,0.3);">${svg('i-camera', 13)} Web Console</a>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-grid" style="margin-bottom: 20px;">
+      <div class="stat-card" style="--card-gradient: var(--gradient-primary); padding: 16px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+          <div style="width:38px; height:38px; border-radius:10px; background:rgba(236,72,153,0.12); color:#EC4899; display:flex; align-items:center; justify-content:center;">${svg('i-cpu', 20)}</div>
+        </div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--text-primary);">${vm.cpus || '—'}</div>
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing:0.5px;">vCPUs</div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">${vm.cpu_sockets || 1}S × ${vm.cpu_cores || 1}C × ${vm.cpu_threads || 1}T</div>
+      </div>
+      <div class="stat-card" style="--card-gradient: var(--gradient-blue); padding: 16px;">
+        <div style="width:38px; height:38px; border-radius:10px; background:rgba(16,185,129,0.12); color:#10B981; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">${svg('i-mem', 20)}</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--text-primary);">${formatBytes(vm.memory)}</div>
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing:0.5px;">RAM</div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">${vm.memory}MB total</div>
+      </div>
+      <div class="stat-card" style="--card-gradient: var(--gradient-orange); padding: 16px;">
+        <div style="width:38px; height:38px; border-radius:10px; background:rgba(6,182,212,0.12); color:#06B6D4; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">${svg('i-disc', 20)}</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--text-primary);">${vm.disk_size || '—'}</div>
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing:0.5px;">Storage</div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">qcow2 format</div>
+      </div>
+      <div class="stat-card" style="--card-gradient: var(--gradient-green); padding: 16px;">
+        <div style="width:38px; height:38px; border-radius:10px; background:rgba(59,130,246,0.12); color:#3B82F6; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">${svg('i-globe', 20)}</div>
+        <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); word-break: break-all;">${vm.ipv4_address || 'DHCP'}</div>
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing:0.5px;">IPv4</div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">SSH: ${vm.ssh_port || vm.ssh_port_static || '22'}</div>
+      </div>
+    </div>
+
+    <!-- Detail Tabs -->
+    <div class="card">
+      <div class="card-header" style="padding-bottom: 0; border-bottom: none;">
+        <div class="tabs" style="margin-bottom: 0; border-bottom: 1px solid var(--border-subtle); width: 100%;">
+          <button class="tab-btn active" onclick="switchTab('overview')" data-tab="overview">${svg('i-list', 13)} Overview</button>
+          <button class="tab-btn" onclick="switchTab('network')" data-tab="network">${svg('i-globe', 13)} Network</button>
+          <button class="tab-btn" onclick="switchTab('hardware')" data-tab="hardware">${svg('i-cpu', 13)} Hardware</button>
+          <button class="tab-btn" onclick="switchTab('snapshots')" data-tab="snapshots">${svg('i-camera', 13)} Snapshots</button>
+          <button class="tab-btn" onclick="switchTab('logs')" data-tab="logs">${svg('i-scroll', 13)} Logs</button>
+        </div>
+      </div>
+      <div class="card-body">
+
+        <!-- Overview Tab -->
+        <div class="tab-pane active" id="tab-overview">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6366F1; margin-bottom: 12px; display:inline-flex; align-items:center; gap:6px;">${svg('i-server', 12)} System Information</div>
+              ${renderInfoRow('VM Name', vm.vm_name)}
+              ${renderInfoRow('VM ID', `#${vm.vm_id}`)}
+              ${renderInfoRow('Operating System', vm.os_type || 'Custom OS')}
+              ${renderInfoRow('Template Type', vm.template_type || '—')}
+              ${renderInfoRow('Hostname', vm.hostname || '—')}
+              ${renderInfoRow('Node', vm.node_name || 'localhost')}
+              ${renderInfoRow('Created', vm.created_at ? new Date(vm.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')}
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #10B981; margin-bottom: 12px; display:inline-flex; align-items:center; gap:6px;">${svg('i-shield', 12)} Access Information</div>
+              ${renderInfoRow('Username', vm.username || '—', false, true)}
+              ${renderInfoRow('SSH Port', vm.ssh_port || vm.ssh_port_static || '22')}
+              ${renderInfoRow('HTTP Port', vm.http_port || '80')}
+              ${renderInfoRow('Network Type', vm.network_type || 'DHCP')}
+              ${renderInfoRow('MAC Address', vm.mac_address || '—', true)}
+              ${renderInfoRow('KVM Enabled', vm.enable_kvm ? renderStatusIcon(true, 'Yes') : renderStatusIcon(false, 'No'))}
+              ${renderInfoRow('ACPI Enabled', vm.enable_acpi ? renderStatusIcon(true, 'Yes') : renderStatusIcon(false, 'No'))}
+            </div>
+          </div>
+          
+          ${vm.ssh_port || vm.ssh_port_static ? `
+          <div style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139,92,246,0.03)); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-md);">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.8px; display:inline-flex; align-items:center; gap:6px;">
+              <span style="color:#6366F1;">${svg('i-terminal', 12)}</span> Quick SSH Connect
+            </div>
+            <div class="code-block" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; font-family: monospace;">
+              <span id="sshCmd">ssh ${escHtml(vm.username || 'root')}@localhost -p ${vm.ssh_port || vm.ssh_port_static || 22}</span>
+              <button class="btn btn-ghost btn-sm" onclick="copySSH()">${svg('i-copy', 12)} Copy</button>
+            </div>
+          </div>
+          ` : ''}
+          
+          <!-- ISO Management Section -->
+          <div id="isoManagementSection" style="margin-top: 20px; padding: 16px; background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: var(--radius-md); display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap:12px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                <div style="width:38px; height:38px; border-radius:10px; background:rgba(6,182,212,0.15); color:#06B6D4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${svg('i-disc', 20)}</div>
+                <div style="min-width:0;">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px;">ISO Management</div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);" id="isoStatus">Loading...</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary btn-sm" onclick="openISOAttachModal()" id="attachISOBtn" style="display: none;">${svg('i-attach', 12)} Attach ISO</button>
+                <button class="btn btn-ghost btn-sm" onclick="detachISO()" id="detachISOBtn" style="display: none;">${svg('i-unlink', 12)} Detach ISO</button>
+              </div>
+            </div>
+            <div id="isoInfo" style="font-size: 12px; color: var(--text-muted);"></div>
+          </div>
+        </div>
+
+        <!-- Network Tab -->
+        <div class="tab-pane" id="tab-network">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #3B82F6; margin-bottom: 12px; display:inline-flex; align-items:center; gap:6px;">${svg('i-globe', 12)} IPv4 Configuration</div>
+              ${renderInfoRow('Type', vm.network_type || 'DHCP')}
+              ${renderInfoRow('IPv4 Address', vm.ipv4_address || 'DHCP Auto')}
+              ${renderInfoRow('Gateway', vm.gateway || '—')}
+              ${renderInfoRow('Netmask', vm.netmask || '/24')}
+              ${renderInfoRow('DNS', vm.dns_servers || '8.8.8.8, 8.8.4.4')}
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #06B6D4; margin-bottom: 12px; display:inline-flex; align-items:center; gap:6px;">${svg('i-network', 12)} Additional Network</div>
+              ${renderInfoRow('IPv6 Address', vm.ipv6_address || 'Not configured')}
+              ${renderInfoRow('IPv6 Gateway', vm.ipv6_gateway || '—')}
+              ${renderInfoRow('MAC Address', vm.mac_address || '—', true)}
+              ${renderInfoRow('VLAN ID', vm.vlan_id || 'None')}
+              ${renderInfoRow('Bridge', vm.bridge_interface || '—')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Hardware Tab -->
+        <div class="tab-pane" id="tab-hardware">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #EC4899; margin-bottom: 12px; display:inline-flex; align-items:center; gap:6px;">${svg('i-cpu', 12)} CPU Configuration</div>
+              ${renderInfoRow('CPU Model', vm.cpu_model || 'host')}
+              ${renderInfoRow('Custom CPU', vm.custom_cpu_name || '—')}
+              ${renderInfoRow('Sockets', vm.cpu_sockets || '1')}
+              ${renderInfoRow('Cores', vm.cpu_cores || '2')}
+              ${renderInfoRow('Threads', vm.cpu_threads || '1')}
+              ${renderInfoRow('Total vCPUs', vm.cpus || '—')}
+              ${renderInfoRow('Machine Type', vm.machine_type || 'pc')}
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #F59E0B; margin-bottom: 12px; display:inline-flex; align-items:center; gap:6px;">${svg('i-wrench', 12)} SMBIOS / Identity</div>
+              ${renderInfoRow('Manufacturer', vm.smbios_manufacturer || 'QEMU')}
+              ${renderInfoRow('Product', vm.smbios_product || '—')}
+              ${renderInfoRow('Version', vm.smbios_version || '1.0')}
+              ${renderInfoRow('Serial', vm.smbios_serial || '—', true)}
+              ${renderInfoRow('Board Name', vm.board_name || '—')}
+              ${renderInfoRow('Product Name', vm.product_name || '—')}
+            </div>
+          </div>
+          ${vm.extra_args ? `
+          <div style="margin-top: 20px;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; display:inline-flex; align-items:center; gap:6px;">${svg('i-terminal', 12)} Extra QEMU Arguments</div>
+            <div class="code-block">${escHtml(vm.extra_args)}</div>
+          </div>` : ''}
+        </div>
+
+        <!-- Snapshots Tab -->
+        <div class="tab-pane" id="tab-snapshots">
+          <div style="display: flex; justify-content: space-between; align-items:center; margin-bottom: 16px;">
+            <div style="font-size: 13px; color: var(--text-muted);">Manage VM snapshots for backup and recovery</div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('snapshotModal')" ${isRunning ? '' : 'disabled title="VM must be running"'}>
+              ${svg('i-camera', 12)} New Snapshot
+            </button>
+          </div>
+          <div id="snapshotsList">
+            <div style="text-align: center; padding: 20px;"><div class="spinner" style="margin: 0 auto;"></div></div>
+          </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div class="tab-pane" id="tab-logs">
+          <div id="logsList">
+            <div style="text-align: center; padding: 20px;"><div class="spinner" style="margin: 0 auto;"></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card" style="margin-top: 20px; border-color: rgba(239, 68, 68, 0.25);">
+      <div class="card-header">
+        <div class="card-title" style="color: var(--accent-red); display:flex; align-items:center; gap:8px;">
+          <span style="color:#EF4444;display:inline-flex;">${svg('i-alert', 18)}</span>
+          Danger Zone
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-subtle);">
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); display:inline-flex; align-items:center; gap:6px;">
+              <span style="color:#F59E0B;">${svg('i-wrench', 14)}</span> Reinstall VM
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">Wipe disk and reinstall from template. Stops VM first.</div>
+          </div>
+          <button class="btn btn-warning btn-sm" onclick="doAction('reinstall')">${svg('i-refresh', 12)} Reinstall</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; padding: 14px 0;">
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--accent-red); display:inline-flex; align-items:center; gap:6px;">
+              <span>${svg('i-trash', 14)}</span> Delete VM
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">Permanently delete this VM and all associated files.</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteVM()">${svg('i-trash', 12)} Delete</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  loadSnapshots();
+  loadLogs();
+}
+
+function renderStatusIcon(enabled, label) {
+  return enabled
+    ? `<span style="display:inline-flex;align-items:center;gap:5px;color:#10B981;font-weight:600;">${svg('i-check-circle', 12)} ${label}</span>`
+    : `<span style="display:inline-flex;align-items:center;gap:5px;color:#EF4444;font-weight:600;">${svg('i-x-circle', 12)} ${label}</span>`;
+}
+
+function renderInfoRow(label, value, mono = false, bold = false) {
+  return `
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-subtle); gap: 12px;">
+      <span style="font-size: 12px; color: var(--text-muted); flex-shrink: 0;">${escHtml(label)}</span>
+      <span style="font-size: 12px; color: ${bold ? 'var(--text-primary)' : 'var(--text-secondary)'}; ${mono ? 'font-family: monospace; font-size: 11px;' : ''} ${bold ? 'font-weight: 600;' : ''} text-align: right; word-break: break-all;">${value === null || value === undefined ? '—' : String(value).includes('<span') ? value : escHtml(String(value))}</span>
+    </div>`;
+}
+
+function formatBytes(mb) {
+  if (!mb) return '—';
+  if (mb >= 1024) return (mb / 1024).toFixed(1) + ' GB';
+  return mb + ' MB';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-pane').forEach(pane => {
+    pane.classList.toggle('active', pane.id === `tab-${tab}`);
+  });
+}
+
+async function doAction(action) {
+  if (action === 'reinstall') {
+    openModal('reinstallModal');
+    loadTemplatesForReinstall();
+    return;
+  }
+  
+  const msgs = {
+    start: 'Start this VM?',
+    stop: 'Stop this VM? Running processes will be interrupted.',
+    restart: 'Restart this VM?'
+  };
+  
+  const confirmed = await confirmAction(msgs[action] || `${action} VM?`, action.charAt(0).toUpperCase() + action.slice(1) + ' Virtual Machine');
+  if (!confirmed) return;
+  
+  try {
+    showToast(`${action.charAt(0).toUpperCase() + action.slice(1)}ing VM...`, 'info');
+    const res = await fetch(`/api/vms/${vmId}/${action}`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`VM ${action}ed successfully`, 'success');
+      setTimeout(loadVM, 1500);
+    } else {
+      showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+    }
+  } catch(e) {
+    showToast('Action failed: ' + e.message, 'error');
+  }
+}
+
+async function deleteVM() {
+  const confirmed = await confirmAction(
+    `Permanently delete VM "${vmData?.vm_name || vmId}"? This will delete all files and cannot be undone!`,
+    'Delete Virtual Machine',
+    'danger'
+  );
+  if (!confirmed) return;
+  
+  try {
+    showToast('Deleting VM...', 'warning');
+    const res = await fetch(`/api/vms/${vmId}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('VM deleted', 'success');
+      setTimeout(() => { window.location.href = '/admin/vms'; }, 1000);
+    } else {
+      const data = await res.json();
+      showToast('Failed: ' + (data.error || 'Unknown error'), 'error');
+    }
+  } catch(e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+async function loadSnapshots() {
+  const el = document.getElementById('snapshotsList');
+  if (!el) return;
+  try {
+    const res = await fetch(`/api/vms/${vmId}/snapshots`);
+    if (!res.ok) throw new Error('Failed');
+    const snaps = await res.json();
+    
+    if (snaps.length === 0) {
+      el.innerHTML = `
+        <div class="empty-state" style="padding: 40px;">
+          <div class="empty-state-icon" style="color:#8B5CF6;">${svg('i-camera', 48)}</div>
+          <div class="empty-state-title">No Snapshots</div>
+          <div class="empty-state-desc">Create snapshots to save VM state before major changes.</div>
+        </div>`;
+      return;
+    }
+    
+    el.innerHTML = `<div style="display:grid; gap:10px;">` + snaps.map(s => `
+      <div class="snapshot-item" style="display:flex; align-items:center; gap:12px; padding:14px; background:rgba(139,92,246,0.05); border:1px solid rgba(139,92,246,0.15); border-radius:10px; transition:all 0.2s;">
+        <div style="width:36px; height:36px; border-radius:10px; background:rgba(139,92,246,0.15); color:#8B5CF6; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${svg('i-camera', 18)}</div>
+        <div class="snapshot-info" style="flex:1; min-width:0;">
+          <div class="snapshot-name" style="font-weight:600; color:var(--text-primary); margin-bottom:2px;">${escHtml(s.snapshot_name)}</div>
+          <div class="snapshot-meta" style="font-size:11px; color:var(--text-muted); display:inline-flex; align-items:center; gap:6px;">
+            ${svg('i-clock', 11)}
+            ${s.created_at ? new Date(s.created_at).toLocaleString() : '—'}
+            ${s.description ? ` · ${escHtml(s.description)}` : ''}
+          </div>
+        </div>
+        <span style="font-size: 12px; color: var(--text-muted); font-family:monospace;">${s.size_gb ? s.size_gb + ' GB' : ''}</span>
+      </div>
+    `).join('') + `</div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">Could not load snapshots</div>`;
+  }
+}
+
+async function createSnapshot() {
+  const name = document.getElementById('snapshotName')?.value.trim();
+  const desc = document.getElementById('snapshotDesc')?.value.trim();
+  
+  if (!name) { showToast('Snapshot name required', 'warning'); return; }
+  
+  try {
+    const res = await fetch(`/api/vms/${vmId}/snapshots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ snapshot_name: name, description: desc })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('Snapshot created', 'success');
+      closeModal('snapshotModal');
+      loadSnapshots();
+    } else {
+      showToast('Failed: ' + (data.error || 'Unknown error'), 'error');
+    }
+  } catch(e) {
+    showToast('Failed: ' + e.message, 'error');
+  }
+}
+
+async function loadLogs() {
+  const el = document.getElementById('logsList');
+  if (!el) return;
+  try {
+    const res = await fetch(`/api/vms/${vmId}/logs`);
+    if (!res.ok) throw new Error('Failed');
+    const logs = await res.json();
+    
+    if (logs.length === 0) {
+      el.innerHTML = `<div style="text-align:center; color: var(--text-muted); padding: 30px; font-size: 13px;">${svg('i-scroll', 32)}<br><br>No logs yet</div>`;
+      return;
+    }
+    
+    const iconMap = {
+      start: 'i-play', stop: 'i-stop', restart: 'i-restart',
+      create: 'i-check-circle', delete: 'i-trash', edit: 'i-edit',
+      reinstall: 'i-wrench', snapshot: 'i-camera', failed: 'i-x-circle'
+    };
+    
+    el.innerHTML = `
+      <div class="terminal-container">
+        <div class="terminal-bar">
+          <div class="terminal-dot red"></div>
+          <div class="terminal-dot yellow"></div>
+          <div class="terminal-dot green"></div>
+          <span class="terminal-title">vm-${vmId}.log</span>
+        </div>
+        <div class="terminal-body" style="min-height: 220px; max-height: 380px;">
+          ${logs.map(log => {
+            const iconId = iconMap[log.action] || 'i-info';
+            const color = log.status === 'running' ? '#10b981' : log.status === 'failed' ? '#ef4444' : '#6366f1';
+            return `
+            <div style="margin-bottom: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+              <span style="color: #64748b; font-size: 11px; display:inline-flex; align-items:center; gap:4px; flex-shrink:0;">${svg('i-clock', 10)} ${new Date(log.timestamp).toLocaleString()}</span>
+              <span style="color: ${color}; display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:11px;">${svg(iconId, 11)} [${log.action?.toUpperCase() || 'LOG'}]</span>
+              <span style="color: #e2e8f0; flex:1; min-width:200px;">${escHtml(log.message || '')}</span>
+            </div>
+          `;
+          }).join('')}
+          <span class="terminal-cursor"></span>
+        </div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">Could not load logs</div>`;
+  }
+}
+
+function copySSH() {
+  const cmd = document.getElementById('sshCmd')?.textContent;
+  if (cmd) {
+    navigator.clipboard.writeText(cmd).then(() => showToast('SSH command copied to clipboard', 'success'));
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '—';
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function openModal(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.add('show');
+}
+
+function closeModal(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.remove('show');
+}
+
+function showToast(msg, type = 'info') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const iconMap = { success: 'i-check', error: 'i-x', warning: 'i-alert', info: 'i-info' };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="toast-icon">${svg(iconMap[type] || 'i-info', 16)}</span><span class="toast-message">${escHtml(msg)}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 4500);
+}
+
+function confirmAction(msg, title, variant = 'warning') {
+  return new Promise((resolve) => {
+    const isDanger = variant === 'danger';
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-lg);width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:slideInModal 0.35s ease-out;overflow:hidden;';
+    
+    const iconColor = isDanger ? '#EF4444' : '#F59E0B';
+    const iconBg = isDanger ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)';
+    const btnGrad = isDanger ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'linear-gradient(135deg,#f59e0b,#f97316)';
+    const btnShadow = isDanger ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)';
+    
+    modal.innerHTML = `
+      <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;background:${iconBg};border-radius:10px;display:flex;align-items:center;justify-content:center;color:${iconColor};">
+          ${svg(isDanger ? 'i-alert' : 'i-alert', 22)}
+        </div>
+        <h2 style="margin:0;color:var(--text-primary);font-size:16px;font-weight:700;">${escHtml(title)}</h2>
+      </div>
+      <div style="padding:20px 22px;">
+        <p style="margin:0;color:var(--text-secondary);font-size:14px;line-height:1.5;">${escHtml(msg)}</p>
+      </div>
+      <div style="padding:14px 22px 18px;border-top:1px solid var(--border-subtle);display:flex;gap:10px;justify-content:flex-end;">
+        <button id="cancelBtn" style="padding:9px 18px;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-size:13px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);">Cancel</button>
+        <button id="confirmBtn" style="padding:9px 18px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-weight:600;font-size:13px;background:${btnGrad};color:white;box-shadow:0 4px 12px ${btnShadow};">Confirm</button>
+      </div>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    const cleanup = () => overlay.remove();
+    modal.querySelector('#confirmBtn').onclick = () => { cleanup(); resolve(true); };
+    modal.querySelector('#cancelBtn').onclick = () => { cleanup(); resolve(false); };
+    overlay.onclick = (e) => { if (e.target === overlay) { cleanup(); resolve(false); } };
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { cleanup(); resolve(false); document.removeEventListener('keydown', esc); }
+    });
+  });
+}
+
+// Reinstall Functions
+async function loadTemplatesForReinstall() {
+  try {
+    const res = await fetch('/api/admin/templates');
+    if (!res.ok) throw new Error('Failed to load templates');
+    
+    const templates = await res.json();
+    const select = document.getElementById('reinstall_template');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">— Choose Template —</option>';
+    
+    const builtIn = {
+      'ubuntu_22_cloud': 'Ubuntu 22.04 LTS (Cloud)',
+      'ubuntu_24_cloud': 'Ubuntu 24.04 LTS (Cloud)',
+      'debian_12_cloud': 'Debian 12 (Cloud)',
+      'fedora_40_cloud': 'Fedora 40 (Cloud)',
+      'centos_9_cloud': 'CentOS 9 Stream (Cloud)',
+      'almalinux_9_cloud': 'AlmaLinux 9 (Cloud)'
+    };
+    
+    Object.entries(builtIn).forEach(([key, name]) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+    
+    if (templates && templates.custom && Array.isArray(templates.custom) && templates.custom.length > 0) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = '--- Custom Templates ---';
+      templates.custom.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.template_key;
+        opt.textContent = `${t.template_name} (Custom)`;
+        optgroup.appendChild(opt);
+      });
+      select.appendChild(optgroup);
+    }
+  } catch (e) {
+    console.error('Failed to load templates:', e.message);
+    showToast('Failed to load templates', 'error');
+  }
+}
+
+async function performReinstall(e) {
+  e.preventDefault();
+  
+  const btn = document.getElementById('confirmReinstallBtn');
+  
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner spinner-sm" style="margin-right:6px;"></span> Reinstalling...`;
+  
+  try {
+    const form = document.getElementById('reinstallForm');
+    const fd = new FormData(form);
+    const data = {
+      new_os_template: fd.get('new_os_template'),
+      new_username: fd.get('new_username') || undefined,
+      new_password: fd.get('new_password') || undefined,
+      confirm: fd.get('confirm') === 'on'
+    };
+    
+    if (!data.new_os_template) throw new Error('Please select an OS template');
+    if (!data.confirm) throw new Error('Please confirm the reinstall');
+    
+    const res = await fetch(`/api/vms/${vmId}/reinstall`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await res.json();
+    
+    if (res.ok && result.success) {
+      showToast(result.message || 'VM reinstall started', 'success');
+      closeModal('reinstallModal');
+      setTimeout(() => loadVM(), 1500);
+    } else {
+      throw new Error(result.error || 'Reinstall failed');
+    }
+  } catch (e) {
+    showToast('Reinstall error: ' + e.message, 'error');
+    btn.innerHTML = `${svg('i-refresh', 14)} Reinstall`;
+    btn.disabled = false;
+  }
+}
+
+// ISO Management
+async function loadISOStatus() {
+  try {
+    const res = await fetch(`/api/vms/${vmId}/iso/status`);
+    if (!res.ok) return;
+    
+    const data = await res.json();
+    const section = document.getElementById('isoManagementSection');
+    const statusDiv = document.getElementById('isoStatus');
+    const infoDiv = document.getElementById('isoInfo');
+    const attachBtn = document.getElementById('attachISOBtn');
+    const detachBtn = document.getElementById('detachISOBtn');
+    
+    if (!section) return;
+    
+    if (vmData && vmData.template_type === 'iso') {
+      section.style.display = 'block';
+      
+      if (data.iso_attached) {
+        statusDiv.textContent = `ISO Attached: ${data.iso_attached}`;
+        infoDiv.innerHTML = `
+          <div style="margin-bottom: 6px; display:inline-flex; align-items:center; gap:6px;">
+            <span style="color:#06B6D4;">${svg('i-disc', 13)}</span>
+            <strong>Current ISO:</strong> ${escHtml(data.iso_attached)}
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); display:inline-flex; align-items:center; gap:6px;">
+            <span>${svg('i-power', 11)}</span> Boot Mode: ${data.boot_from_iso ? 'Boot from ISO' : 'Boot from Disk'} · 
+            VM Status: ${data.vm_status ? data.vm_status.toUpperCase() : 'Unknown'}
+          </div>
+        `;
+        attachBtn.style.display = 'none';
+        detachBtn.style.display = 'inline-flex';
+      } else {
+        statusDiv.textContent = 'No ISO Attached';
+        infoDiv.innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px;">
+            Attach an ISO file to boot from it. After installation, detach to boot from disk.
+          </div>
+        `;
+        attachBtn.style.display = 'inline-flex';
+        detachBtn.style.display = 'none';
+      }
+    } else {
+      section.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('Failed to load ISO status:', e);
+  }
+}
+
+async function loadISOFiles() {
+  try {
+    const res = await fetch('/api/iso-list');
+    if (!res.ok) throw new Error('Failed to load ISOs');
+    
+    const files = await res.json();
+    const select = document.getElementById('isoFileSelect');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">— Select ISO file —</option>';
+    if (files.length === 0) {
+      select.innerHTML = '<option value="">No ISO files available</option>';
+      select.disabled = true;
+      return;
+    }
+    
+    files.forEach(file => {
+      const opt = document.createElement('option');
+      opt.value = file;
+      opt.textContent = file;
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    console.error('Failed to load ISO files:', e);
+    showToast('Failed to load ISO files', 'error');
+  }
+}
+
+function openISOAttachModal() {
+  loadISOFiles();
+  openModal('isoAttachModal');
+}
+
+async function performISOAttach() {
+  const select = document.getElementById('isoFileSelect');
+  const isoFile = select.value;
+  
+  if (!isoFile) {
+    showToast('Please select an ISO file', 'warning');
+    return;
+  }
+  
+  try {
+    showToast('Attaching ISO...', 'info');
+    const res = await fetch(`/api/vms/${vmId}/iso/attach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ iso_file: isoFile })
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok && data.success) {
+      showToast(data.message || 'ISO attached successfully', 'success');
+      closeModal('isoAttachModal');
+      loadISOStatus();
+    } else {
+      throw new Error(data.error || 'Failed to attach ISO');
+    }
+  } catch (e) {
+    showToast('ISO attach failed: ' + e.message, 'error');
+  }
+}
+
+async function detachISO() {
+  const confirmed = await confirmAction('Detach the ISO and boot from disk on next start?', 'Detach ISO');
+  if (!confirmed) return;
+  
+  try {
+    showToast('Detaching ISO...', 'info');
+    const res = await fetch(`/api/vms/${vmId}/iso/detach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok && data.success) {
+      showToast(data.message || 'ISO detached successfully', 'success');
+      loadISOStatus();
+    } else {
+      throw new Error(data.error || 'Failed to detach ISO');
+    }
+  } catch (e) {
+    showToast('ISO detach failed: ' + e.message, 'error');
+  }
+}
+
+// Init
+loadVM();
+</script>
+</body>
+</html>

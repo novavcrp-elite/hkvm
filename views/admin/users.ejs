@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Users - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+
+  <%- include('../partials/admin/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-section">
+          <h1 class="page-title">
+            <i class="fas fa-users" style="color: #6366F1;"></i> User Management
+          </h1>
+          <p class="page-subtitle">Manage user accounts and permissions</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost btn-sm" onclick="loadUsers()">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+          <a href="/admin/users/create" class="btn btn-primary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fas fa-user-plus"></i> Add User
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+        <div class="stat-card" style="--card-gradient: var(--gradient-primary); padding: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="stat-value" style="font-size: 24px;" id="totalUsersCount">—</div>
+              <div class="stat-label">Total Users</div>
+            </div>
+            <div style="font-size: 28px;"><i class="fas fa-users" style="color: #6366F1;"></i></div>
+          </div>
+        </div>
+        <div class="stat-card" style="--card-gradient: linear-gradient(135deg, #8b5cf6, #7c3aed); padding: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="stat-value" style="font-size: 24px;" id="adminCount">—</div>
+              <div class="stat-label">Admins</div>
+            </div>
+            <div style="font-size: 28px;"><i class="fas fa-crown" style="color: #F59E0B;"></i></div>
+          </div>
+        </div>
+        <div class="stat-card" style="--card-gradient: var(--gradient-green); padding: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="stat-value" style="font-size: 24px;" id="activeUsersCount">—</div>
+              <div class="stat-label">Active</div>
+            </div>
+            <div style="font-size: 28px;"><i class="fas fa-check-circle" style="color: #10B981;"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-bar" style="margin-bottom: 16px;">
+        <div class="search-input-wrapper" style="flex: 1; max-width: 300px;">
+          <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px;"></i>
+          <input type="text" class="form-control" id="userSearch" placeholder="Search users..." oninput="filterUsers()" style="padding-left: 36px;">
+        </div>
+        <select class="form-control" id="roleFilter" onchange="filterUsers()" style="width: 140px;">
+          <option value="">All Roles</option>
+          <option value="admin"><i class="fas fa-crown"></i> Admin</option>
+          <option value="user"><i class="fas fa-user"></i> User</option>
+        </select>
+      </div>
+
+      <!-- Users Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-users" style="color: #6366F1;"></i> Users</div>
+          <span id="userCount" style="font-size: 11px; color: var(--text-muted);"></span>
+        </div>
+        <div class="table-container" id="usersTable">
+          <div style="padding: 40px; text-align: center;">
+            <div class="spinner spinner-lg" style="margin: 0 auto 16px;"></div>
+            <div style="color: var(--text-muted);">Loading users...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+let allUsers = [];
+
+async function loadUsers() {
+  try {
+    const res = await fetch('/api/admin/users');
+    if (!res.ok) throw new Error('Failed to load users');
+    allUsers = await res.json();
+    
+    // Update stats
+    const total = allUsers.length;
+    const admins = allUsers.filter(u => u.role === 'admin').length;
+    const active = allUsers.filter(u => u.is_active).length;
+    
+    document.getElementById('totalUsersCount').textContent = total;
+    document.getElementById('adminCount').textContent = admins;
+    document.getElementById('activeUsersCount').textContent = active;
+    
+    renderUsers();
+  } catch(e) {
+    document.getElementById('usersTable').innerHTML = `
+      <div class="empty-state" style="padding: 40px;">
+        <div class="empty-state-icon"><i class="fas fa-exclamation-triangle" style="color: #EF4444; font-size: 32px;"></i></div>
+        <div class="empty-state-title">Failed to load users</div>
+        <div class="empty-state-desc">${e.message}</div>
+        <button class="btn btn-primary" onclick="loadUsers()"><i class="fas fa-redo"></i> Try Again</button>
+      </div>`;
+    showToast('Failed to load users', 'error');
+  }
+}
+
+function filterUsers() { renderUsers(); }
+
+function renderUsers() {
+  const q = document.getElementById('userSearch')?.value.toLowerCase() || '';
+  const role = document.getElementById('roleFilter')?.value || '';
+  
+  const filtered = allUsers.filter(u => {
+    const matchQ = !q || u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+    const matchRole = !role || u.role === role;
+    return matchQ && matchRole;
+  });
+  
+  const count = document.getElementById('userCount');
+  if (count) count.textContent = `${filtered.length} of ${allUsers.length} users`;
+  
+  if (filtered.length === 0) {
+    document.getElementById('usersTable').innerHTML = `
+      <div class="empty-state" style="padding: 40px;">
+        <div class="empty-state-icon"><i class="fas fa-search" style="color: var(--text-muted); font-size: 32px;"></i></div>
+        <div class="empty-state-title">No Users Found</div>
+        <div class="empty-state-desc">No users match your search.</div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('usersTable').innerHTML = `
+    <table class="table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(u => `
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 34px; height: 34px; background: ${u.role === 'admin' ? 'var(--gradient-primary)' : 'var(--gradient-green)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; flex-shrink: 0;">
+                  ${u.username.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${escHtml(u.username)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">ID: ${u.id}</div>
+                </div>
+              </div>
+            </td>
+            <td style="color: var(--text-secondary); font-size: 12px;">${escHtml(u.email || '—')}</td>
+            <td>
+              <span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">
+                ${u.role === 'admin' ? '<i class="fas fa-crown" style="color: #F59E0B;"></i>' : '<i class="fas fa-user" style="color: #3B82F6;"></i>'} ${u.role}
+              </span>
+            </td>
+            <td>
+              <span class="badge ${u.is_active ? 'badge-running' : 'badge-stopped'}">
+                ${u.is_active ? '<i class="fas fa-check-circle" style="color: #10B981;"></i> Active' : '<i class="fas fa-times-circle" style="color: #EF4444;"></i> Inactive'}
+              </span>
+            </td>
+            <td style="font-size: 11px; color: var(--text-muted);">
+              ${u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <a href="/admin/users/${u.id}/edit" class="btn btn-primary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fas fa-edit"></i> Edit
+                </a>
+                ${u.id === 1 ? '' : `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id}, '${escHtml(u.username)}')"><i class="fas fa-trash"></i> Delete</button>`}
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function deleteUser(id, username) {
+  const confirmed = confirm(`Delete user "${username}"? This action cannot be undone.`);
+  if (!confirmed) return;
+  
+  try {
+    const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`User "${username}" deleted`, 'success');
+      loadUsers();
+    } else {
+      showToast('Delete failed: ' + (data.error || 'Unknown error'), 'error');
+    }
+  } catch(e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '—';
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+loadUsers();
+</script>
+</body>
+</html>
+

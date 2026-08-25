@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'My LXC Containers - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png"><link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .page-header-enhanced{display:flex;align-items:flex-start;justify-content:space-between;padding:0 0 20px;border-bottom:1px solid var(--border-subtle);margin-bottom:20px;flex-wrap:wrap;gap:16px}
+    .page-title-enhanced{font-size:22px;font-weight:800;color:var(--text-primary);margin:0 0 6px;display:flex;align-items:center;gap:10px}
+    .page-subtitle-enhanced{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0}
+    .live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);color:#10B981;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .live-badge .pulse{width:6px;height:6px;background:#10B981;border-radius:50%;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .btn-refresh{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+    .btn-refresh:hover{border-color:var(--color-indigo);color:var(--color-indigo)}
+    .btn-refresh.spinning svg{animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .stats-enhanced{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+    .stat-card-enhanced{background:var(--bg-card);border:1px solid var(--border-card);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+    .stat-card-enhanced::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent-color, var(--color-indigo));border-radius:0 3px 3px 0;transition:width .25s}
+    .stat-card-enhanced:hover,.stat-card-enhanced.active{border-color:var(--accent-color, var(--color-indigo));transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+    .stat-card-enhanced.active::before{width:5px}
+    .stat-inner{display:flex;align-items:center;justify-content:space-between}
+    .stat-value-enhanced{font-size:24px;font-weight:800;color:var(--text-primary);line-height:1}
+    .stat-label-enhanced{font-size:12px;color:var(--text-muted);margin-top:4px;font-weight:500}
+    .stat-icon-box{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, var(--accent-color) 10%, transparent);color:var(--accent-color)}
+    .filter-bar-enhanced{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+    .search-wrap{flex:1;min-width:220px;position:relative}
+    .search-icon-svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-muted);pointer-events:none}
+    .search-input{width:100%;padding:10px 12px 10px 38px;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-card);color:var(--text-primary);font-size:13px;outline:none;transition:border-color .2s}
+    .search-input:focus{border-color:var(--color-indigo)}
+    .filter-select{padding:10px 14px;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-card);color:var(--text-primary);font-size:13px;cursor:pointer;outline:none}
+    .view-switcher{display:flex;border:1px solid var(--border-color);border-radius:10px;overflow:hidden}
+    .view-btn{padding:9px 12px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:all .2s}
+    .view-btn.active{background:var(--color-indigo);color:#fff}
+    .vm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+    .vm-card-enhanced{background:var(--bg-card);border:1px solid var(--border-card);border-radius:14px;padding:0;cursor:pointer;transition:all .25s;overflow:hidden}
+    .vm-card-enhanced:hover{border-color:var(--color-indigo);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.1)}
+    .vm-card-enhanced.running{border-left:3px solid #10B981}
+    .vm-card-enhanced.stopped{border-left:3px solid #6B7280}
+    .vm-card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border-subtle)}
+    .vm-title-block{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+    .vm-os-icon{width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+    .vm-os-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+    .vm-name-enhanced{font-size:14px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .vm-meta-enhanced{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin-top:2px}
+    .vm-id-chip{background:rgba(99,102,241,0.1);color:#6366F1;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600}
+    .status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase}
+    .status-badge.running{background:rgba(16,185,129,0.12);color:#10B981}
+    .status-badge.stopped{background:rgba(107,114,128,0.12);color:#9CA3AF}
+    .status-badge.error{background:rgba(239,68,68,0.12);color:#EF4444}
+    .status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .vm-specs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-subtle);margin:0}
+    .spec-item{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg-card)}
+    .spec-icon-mini{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .spec-icon-mini.mem{background:rgba(16,185,129,0.1);color:#10B981}
+    .spec-icon-mini.cpu{background:rgba(236,72,153,0.1);color:#EC4899}
+    .spec-icon-mini.disk{background:rgba(6,182,212,0.1);color:#06B6D4}
+    .spec-icon-mini.net{background:rgba(245,158,11,0.1);color:#F59E0B}
+    .spec-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;font-weight:600}
+    .spec-value{font-size:12px;color:var(--text-primary);font-weight:600}
+    .vm-actions-enhanced{display:flex;gap:6px;padding:12px 14px;flex-wrap:wrap;border-top:1px solid var(--border-subtle)}
+    .btn-action{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none}
+    .btn-action:hover{border-color:var(--color-indigo);color:var(--color-indigo)}
+    .btn-action.start{border-color:rgba(16,185,129,0.3);color:#10B981}
+    .btn-action.start:hover{background:rgba(16,185,129,0.1)}
+    .btn-action.stop{border-color:rgba(239,68,68,0.3);color:#EF4444}
+    .btn-action.stop:hover{background:rgba(239,68,68,0.1)}
+    .btn-action.primary{border-color:rgba(99,102,241,0.3);color:#6366F1}
+    .btn-action.primary:hover{background:rgba(99,102,241,0.1)}
+    .vm-table-wrap{background:var(--bg-card);border:1px solid var(--border-card);border-radius:14px;overflow:hidden}
+    .vm-table{width:100%;border-collapse:collapse}
+    .vm-table th{padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border-card);background:var(--bg-card)}
+    .vm-table td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);font-size:13px;vertical-align:middle}
+    .vm-table tr:last-child td{border-bottom:none}
+    .vm-table tr:hover td{background:rgba(99,102,241,0.03)}
+    .vm-name-link{color:var(--text-primary);font-weight:600;text-decoration:none;transition:color .2s}
+    .vm-name-link:hover{color:var(--color-indigo)}
+    .empty-enhanced{text-align:center;padding:60px 20px}
+    .empty-icon-wrap{width:64px;height:64px;border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(99,102,241,0.12), rgba(99,102,241,0.04));color:#6366F1}
+    .empty-icon-wrap svg{width:28px;height:28px}
+    .empty-title{font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px}
+    .empty-desc{font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:400px;margin-left:auto;margin-right:auto}
+    .toast-container{position:fixed;bottom:20px;right:20px;z-index:3000;display:flex;flex-direction:column-reverse;gap:8px}
+    .toast{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25);animation:slideInToast .3s ease-out;max-width:380px}
+    .toast-success{background:linear-gradient(135deg,#10B981,#059669)}
+    .toast-error{background:linear-gradient(135deg,#EF4444,#DC2626)}
+    .toast-info{background:linear-gradient(135deg,#6366F1,#4F46E5)}
+    .toast-icon{display:flex;align-items:center}
+    .toast-message{flex:1}
+    .toast-close{background:none;border:none;color:#fff;cursor:pointer;font-size:18px;opacity:.7;padding:0 0 0 8px}
+    .toast-close:hover{opacity:1}
+    .toast.removing{animation:slideOutToast .3s ease-in forwards}
+    @keyframes slideInToast{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes slideOutToast{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+    @keyframes slideInModal{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+    .icon{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  </style>
+</head>
+<body>
+
+<svg style="display:none">
+  <defs>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+      <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+    </symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+    </symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+    </symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+    </symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+      <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+      <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+      <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+      <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+    </symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
+    </symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+    </symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/users/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+
+      <!-- Enhanced Header -->
+      <div class="page-header-enhanced">
+        <div style="position: relative; z-index: 1;">
+          <h1 class="page-title-enhanced">
+            My LXC Containers
+          </h1>
+          <p class="page-subtitle-enhanced">
+            Manage and monitor your assigned LXC containers
+            <span class="live-badge"><span class="pulse"></span>Live · Auto-refresh 30s</span>
+            <span id="lastUpdate" style="opacity: 0.7;"></span>
+          </p>
+        </div>
+        <div style="position: relative; z-index: 1; display: flex; gap: 10px;">
+          <a href="/lxc/create" class="btn-refresh" style="text-decoration:none; background: var(--color-indigo); color: #fff; border-color: var(--color-indigo);">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            Create Container
+          </a>
+          <button class="btn-refresh" onclick="syncFromServer()" style="border-color: rgba(245,158,11,0.3); color: #F59E0B;">
+            <svg class="icon"><use href="#i-refresh"/></svg>
+            Sync from Server
+          </button>
+          <button class="btn-refresh" id="refreshBtn" onclick="loadLXC()">
+            <svg class="icon"><use href="#i-refresh"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-enhanced">
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-indigo);" onclick="quickFilter('')" data-filter="">
+          <div class="stat-inner">
+            <div>
+              <div class="stat-value-enhanced" id="totalCount">—</div>
+              <div class="stat-label-enhanced">Total Containers</div>
+            </div>
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-server"/></svg></div>
+          </div>
+        </div>
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-emerald);" onclick="quickFilter('running')" data-filter="running">
+          <div class="stat-inner">
+            <div>
+              <div class="stat-value-enhanced" id="runningCount">—</div>
+              <div class="stat-label-enhanced">Running</div>
+            </div>
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-play"/></svg></div>
+          </div>
+        </div>
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-gray);" onclick="quickFilter('stopped')" data-filter="stopped">
+          <div class="stat-inner">
+            <div>
+              <div class="stat-value-enhanced" id="stoppedCount">—</div>
+              <div class="stat-label-enhanced">Stopped</div>
+            </div>
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-stop"/></svg></div>
+          </div>
+        </div>
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-cyan);">
+          <div class="stat-inner">
+            <div>
+              <div class="stat-value-enhanced" id="totalMemory">—</div>
+              <div class="stat-label-enhanced">Total RAM</div>
+            </div>
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-mem"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar-enhanced">
+        <div class="search-wrap">
+          <svg class="search-icon-svg"><use href="#i-search"/></svg>
+          <input type="text" class="search-input" id="lxcSearch" placeholder="Search by name, ID, OS, or IP..." oninput="renderLXC()">
+        </div>
+        <select class="filter-select" id="statusFilter" onchange="renderLXC()">
+          <option value="">All Status</option>
+          <option value="running">🟢 Running</option>
+          <option value="stopped">⚫ Stopped</option>
+        </select>
+        <div class="view-switcher">
+          <button class="view-btn" id="viewGrid" onclick="setView('grid')" title="Grid view">
+            <svg class="icon"><use href="#i-grid"/></svg>
+          </button>
+          <button class="view-btn active" id="viewList" onclick="setView('list')" title="List view">
+            <svg class="icon"><use href="#i-list"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- LXC Container -->
+      <div id="lxcContainer">
+        <div class="vm-grid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+let allLXC = [];
+let currentView = 'list';
+
+function formatMem(mem) {
+  if (!mem) return '—';
+  return mem >= 1024 ? (mem / 1024).toFixed(1) + ' GB' : mem + ' MB';
+}
+
+function formatTime() {
+  return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('viewGrid').classList.toggle('active', view === 'grid');
+  document.getElementById('viewList').classList.toggle('active', view === 'list');
+  renderLXC();
+}
+
+function quickFilter(status) {
+  document.getElementById('statusFilter').value = status;
+  document.querySelectorAll('.stat-card-enhanced[data-filter]').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === status);
+  });
+  renderLXC();
+}
+
+async function syncFromServer() {
+  try {
+    showToast('Syncing containers from server...', 'info');
+    const res = await fetch('/api/lxc/sync', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Sync failed');
+    showToast(`Sync complete: ${data.imported} imported, ${data.updated} updated`, 'success');
+    loadLXC();
+  } catch(e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function loadLXC() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+
+  try {
+    const res = await fetch('/api/lxc');
+    if (!res.ok) throw new Error('Failed to fetch containers');
+    allLXC = await res.json();
+
+    const total = allLXC.length;
+    const running = allLXC.filter(c => c.status === 'running').length;
+    const stopped = allLXC.filter(c => c.status === 'stopped').length;
+    const totalMem = allLXC.reduce((s, c) => s + (c.memory || 0), 0);
+
+    animateNumber('totalCount', total);
+    animateNumber('runningCount', running);
+    animateNumber('stoppedCount', stopped);
+    document.getElementById('totalMemory').textContent = formatMem(totalMem);
+    document.getElementById('lastUpdate').textContent = `· Updated ${formatTime()}`;
+
+    renderLXC();
+  } catch(e) {
+    document.getElementById('lxcContainer').innerHTML = `
+      <div class="empty-enhanced">
+        <div class="empty-icon-wrap" style="color: var(--color-red); background: linear-gradient(135deg, var(--color-red-light), rgba(239,68,68,0.05));">
+          <svg class="icon"><use href="#i-alert"/></svg>
+        </div>
+        <div class="empty-title">Failed to Load Containers</div>
+        <div class="empty-desc">${escHtml(e.message)}</div>
+        <button class="btn-refresh" onclick="loadLXC()">
+          <svg class="icon"><use href="#i-refresh"/></svg> Try Again
+        </button>
+      </div>`;
+    showToast('Failed to load containers: ' + e.message, 'error');
+  } finally {
+    setTimeout(() => btn.classList.remove('spinning'), 500);
+  }
+}
+
+function getFilteredLXC() {
+  const q = document.getElementById('lxcSearch')?.value.toLowerCase() || '';
+  const status = document.getElementById('statusFilter')?.value || '';
+
+  return allLXC.filter(c => {
+    const matchQ = !q ||
+      c.name?.toLowerCase().includes(q) ||
+      String(c.id).includes(q) ||
+      c.os_type?.toLowerCase().includes(q) ||
+      c.template_key?.toLowerCase().includes(q) ||
+      c.ipv4_address?.includes(q);
+    const matchStatus = !status || c.status === status;
+    return matchQ && matchStatus;
+  });
+}
+
+function renderLXC() {
+  const filtered = getFilteredLXC();
+  const container = document.getElementById('lxcContainer');
+
+  if (allLXC.length === 0) {
+    container.innerHTML = `
+      <div class="empty-enhanced">
+        <div class="empty-icon-wrap"><svg class="icon"><use href="#i-server"/></svg></div>
+        <div class="empty-title">No LXC Containers</div>
+        <div class="empty-desc">You don't have any containers assigned yet. Contact your administrator to request containers.</div>
+        <a href="/lxc/create" class="btn-refresh" style="text-decoration:none; background: var(--color-indigo); color: #fff; border-color: var(--color-indigo);">
+          <svg class="icon"><use href="#i-plus"/></svg> Create Container
+        </a>
+      </div>`;
+    return;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-enhanced">
+        <div class="empty-icon-wrap"><svg class="icon"><use href="#i-search"/></svg></div>
+        <div class="empty-title">No Containers Found</div>
+        <div class="empty-desc">No containers match your search criteria. Try a different filter.</div>
+      </div>`;
+    return;
+  }
+
+  if (currentView === 'grid') {
+    renderGridView(filtered, container);
+  } else {
+    renderListView(filtered, container);
+  }
+}
+
+function renderGridView(containers, container) {
+  container.innerHTML = `
+    <div class="vm-grid">
+      ${containers.map(c => renderLXCCard(c)).join('')}
+    </div>`;
+}
+
+function renderLXCCard(c) {
+  const status = c.status || 'stopped';
+  const osIcons = {
+    ubuntu: '🐧', debian: '🔴', alpine: '🏔️', centos: '🔷', fedora: '🎩'
+  };
+  const osEmoji = osIcons[(c.os_type || '').toLowerCase()] || '📦';
+
+  return `
+    <div class="vm-card-enhanced ${status}" onclick="window.location.href='/lxc/${c.id}'">
+      <div class="vm-card-header">
+        <div class="vm-title-block">
+          <div class="vm-os-icon" style="font-size: 20px; display: flex; align-items: center; justify-content: center;">
+            ${osEmoji}
+          </div>
+          <div style="min-width: 0; flex: 1;">
+            <div class="vm-name-enhanced">${escHtml(c.name)}</div>
+            <div class="vm-meta-enhanced">
+              <span>${escHtml(c.template_key || c.os_type || 'LXC')}</span>
+              <span class="vm-id-chip">#${c.id}</span>
+              <span style="margin-left:4px;color:var(--text-muted);">· ${escHtml(c.node_name || 'Local')}</span>
+            </div>
+          </div>
+        </div>
+        <span class="status-badge ${status}">
+          <span class="status-dot"></span>${status}
+        </span>
+      </div>
+
+      <div class="vm-specs">
+        <div class="spec-item">
+          <div class="spec-icon-mini cpu"><svg class="icon"><use href="#i-cpu"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">CPU</div>
+            <div class="spec-value">${c.cpu_cores || '—'} Cores</div>
+          </div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-icon-mini mem"><svg class="icon"><use href="#i-mem"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">Memory</div>
+            <div class="spec-value">${c.memory ? formatMem(c.memory) : '—'}</div>
+          </div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-icon-mini disk"><svg class="icon"><use href="#i-disk"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">Storage</div>
+            <div class="spec-value">${c.disk_size || '—'}</div>
+          </div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-icon-mini net"><svg class="icon"><use href="#i-network"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">Network</div>
+            <div class="spec-value">${c.ipv4_address || c.network_type || 'DHCP'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vm-actions-enhanced" onclick="event.stopPropagation()">
+        ${status === 'stopped'
+          ? `<button class="btn-action start" onclick="lxcAction('start', ${c.id}, '${escHtml(c.name)}')">
+              <svg class="icon"><use href="#i-play"/></svg> Start
+            </button>`
+          : `<button class="btn-action stop" onclick="lxcAction('stop', ${c.id}, '${escHtml(c.name)}')">
+              <svg class="icon"><use href="#i-stop"/></svg> Stop
+            </button>`
+        }
+        ${status === 'running' ? `<button class="btn-action" onclick="lxcAction('restart', ${c.id}, '${escHtml(c.name)}')">
+          <svg class="icon"><use href="#i-restart"/></svg> Restart
+        </button>` : ''}
+        <a href="/lxc/${c.id}" class="btn-action primary">
+          <svg class="icon"><use href="#i-info"/></svg> Info
+        </a>
+        <a href="/lxc/${c.id}" class="btn-action" style="color: #8B5CF6;">
+          <svg class="icon"><use href="#i-terminal"/></svg> Console
+        </a>
+        <a href="/lxc/${c.id}" class="btn-action" style="color: #F59E0B;">
+          <svg class="icon"><use href="#i-key"/></svg> tmate
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+function renderListView(containers, container) {
+  container.innerHTML = `
+    <div class="vm-table-wrap">
+      <div style="overflow-x: auto;">
+        <table class="vm-table">
+          <thead>
+            <tr>
+              <th>Container</th>
+              <th>Status</th>
+              <th>Resources</th>
+              <th>Storage</th>
+              <th>Network</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${containers.map(c => {
+              const status = c.status || 'stopped';
+              const osIcons = { ubuntu: '🐧', debian: '🔴', alpine: '🏔️', centos: '🔷' };
+              const osEmoji = osIcons[(c.os_type || '').toLowerCase()] || '📦';
+
+              return `
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="vm-os-icon" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; border-radius: 10px; background: rgba(99,102,241,0.1);">
+                      ${osEmoji}
+                    </div>
+                    <div>
+                      <a href="/lxc/${c.id}" class="vm-name-link">${escHtml(c.name)}</a>
+                      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                        <span class="vm-id-chip">#${c.id}</span>
+                        <span style="margin-left: 6px;">${escHtml(c.template_key || c.os_type || 'LXC')}</span>
+                        <span style="margin-left: 6px; opacity: 0.7;">· ${escHtml(c.node_name || 'Local')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge ${status}">
+                    <span class="status-dot"></span>${status}
+                  </span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 12px; font-size: 12px;">
+                    <div style="display: flex; align-items: center; gap: 5px;" title="CPU">
+                      <span style="color: #EC4899;"><svg class="icon" style="width:12px;height:12px"><use href="#i-cpu"/></svg></span>
+                      <strong style="color: var(--text-primary);">${c.cpu_cores || '—'}</strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;" title="Memory">
+                      <span style="color: #10B981;"><svg class="icon" style="width:12px;height:12px"><use href="#i-mem"/></svg></span>
+                      <strong style="color: var(--text-primary);">${formatMem(c.memory)}</strong>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+                    <span style="color: #06B6D4;"><svg class="icon" style="width:12px;height:12px"><use href="#i-disk"/></svg></span>
+                    <strong style="color: var(--text-primary);">${c.disk_size || '—'}</strong>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size: 12px;">
+                    <div style="color: var(--text-primary); font-weight: 500;">${c.ipv4_address || (c.network_type === 'dhcp' ? 'DHCP' : '—')}</div>
+                    <div style="color: var(--text-muted); margin-top: 2px; font-family: monospace; font-size: 10px;">
+                      SSH: ${c.ssh_port || '22'}
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+                    ${status === 'stopped'
+                      ? `<button class="btn-icon-only start" onclick="lxcAction('start', ${c.id}, '${escHtml(c.name)}')" title="Start">
+                          <svg class="icon"><use href="#i-play"/></svg>
+                        </button>`
+                      : `<button class="btn-icon-only stop" onclick="lxcAction('stop', ${c.id}, '${escHtml(c.name)}')" title="Stop">
+                          <svg class="icon"><use href="#i-stop"/></svg>
+                        </button>`
+                    }
+                    ${status === 'running' ? `<button class="btn-icon-only restart" onclick="lxcAction('restart', ${c.id}, '${escHtml(c.name)}')" title="Restart">
+                      <svg class="icon"><use href="#i-restart"/></svg>
+                    </button>` : ''}
+                    <a href="/lxc/${c.id}" class="btn-icon-only" title="Details">
+                      <svg class="icon"><use href="#i-info"/></svg>
+                    </a>
+                    <a href="/lxc/${c.id}" class="btn-icon-only" title="Console">
+                      <svg class="icon"><use href="#i-terminal"/></svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  const duration = 600;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(current + (target - current) * eased);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+async function lxcAction(action, id, name) {
+  const msgs = {
+    start: `Start container "${name}"?`,
+    stop: `Stop container "${name}"? Running processes will be interrupted.`,
+    restart: `Restart container "${name}"?`
+  };
+
+  const confirmed = await confirmAction(
+    msgs[action] || `${action} "${name}"?`,
+    action.charAt(0).toUpperCase() + action.slice(1) + ' LXC Container'
+  );
+  if (!confirmed) return;
+
+  try {
+    showToast(`${action.charAt(0).toUpperCase() + action.slice(1)}ing container...`, 'info');
+    const res = await fetch(`/api/lxc/${id}/${action}`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success !== false) {
+      showToast(`Container ${action}ed successfully`, 'success');
+      setTimeout(loadLXC, 1000);
+    } else {
+      showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+    }
+  } catch(e) {
+    showToast('Action failed: ' + e.message, 'error');
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>\"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer') || createToastContainer();
+  const iconMap = { success: 'i-check', error: 'i-x', warning: 'i-alert', info: 'i-info' };
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon"><svg class="icon" style="width:18px;height:18px"><use href="#${iconMap[type] || 'i-info'}"/></svg></span>
+    <span class="toast-message">${escHtml(msg)}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.id = 'toastContainer';
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+  return container;
+}
+
+function confirmAction(msg, title) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);';
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-card);border-radius:14px;width:100%;max-width:450px;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:slideInModal 0.3s ease-out;overflow:hidden;';
+
+    modal.innerHTML = `
+      <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:rgba(245,158,11,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#F59E0B;">
+          <svg class="icon" style="width:20px;height:20px;"><use href="#i-alert"/></svg>
+        </div>
+        <h2 style="margin:0;color:var(--text-primary);font-size:16px;font-weight:700;">${escHtml(title)}</h2>
+      </div>
+      <div style="padding:20px 22px;">
+        <p style="margin:0;color:var(--text-secondary);font-size:14px;line-height:1.5;">${escHtml(msg)}</p>
+      </div>
+      <div style="padding:14px 22px 18px;border-top:1px solid var(--border-subtle);display:flex;gap:10px;justify-content:flex-end;">
+        <button id="cancelBtn" style="padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);">Cancel</button>
+        <button id="confirmBtn" style="padding:9px 18px;border-radius:8px;cursor:pointer;border:none;font-weight:600;font-size:13px;background:linear-gradient(135deg, var(--color-amber), var(--color-orange));color:var(--text-primary);box-shadow:0 4px 12px var(--color-amber-light);">Confirm</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const cleanup = () => overlay.remove();
+    modal.querySelector('#confirmBtn').onclick = () => { cleanup(); resolve(true); };
+    modal.querySelector('#cancelBtn').onclick = () => { cleanup(); resolve(false); };
+    overlay.onclick = (e) => { if (e.target === overlay) { cleanup(); resolve(false); } };
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { cleanup(); resolve(false); document.removeEventListener('keydown', esc); }
+    });
+  });
+}
+
+// Init - auto-sync from LXD server, then load
+setView('list');
+(async () => {
+  try {
+    // Auto-sync containers from LXD server on first load
+    await fetch('/api/lxc/sync', { method: 'POST' });
+  } catch(e) {}
+  loadLXC();
+})();
+setInterval(loadLXC, 30000);
+</script>
+</body>
+</html>
