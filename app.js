@@ -4359,7 +4359,37 @@ app.get('/api/settings', (req, res) => {
   });
 });
 
-// Update setting (admin only)
+// Update multiple settings via POST (admin only)
+app.post('/api/settings', checkAuth, checkAdmin, (req, res) => {
+  const settings = req.body;
+  let completed = 0;
+  const total = Object.keys(settings).length;
+  const errors = [];
+
+  if (total === 0) {
+    return res.status(400).json({ error: 'No settings provided' });
+  }
+
+  Object.entries(settings).forEach(([key, value]) => {
+    db.run(
+      `INSERT OR REPLACE INTO settings (setting_key, setting_value, updated_at) VALUES (?, ?, datetime('now'))`,
+      [key, String(value)],
+      (err) => {
+        completed++;
+        if (err) errors.push({ key, error: err.message });
+        if (completed === total) {
+          if (errors.length > 0) {
+            res.status(500).json({ success: false, errors, saved: total - errors.length });
+          } else {
+            res.json({ success: true, saved: total });
+          }
+        }
+      }
+    );
+  });
+});
+
+// Update single setting (admin only)
 app.post('/api/settings/:key', checkAuth, checkAdmin, (req, res) => {
   const { key } = req.params;
   const { value } = req.body;

@@ -198,13 +198,13 @@ async function saveConfig(e) {
     };
 
     const res = await fetch('/api/settings', {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
 
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || 'Failed to save');
+    if (!res.ok) throw new Error(result.error || (result.errors ? result.errors.map(e=>e.error).join(', ') : 'Failed to save'));
 
     showToast('Configuration saved!', 'success');
   } catch(e) {
