@@ -1,0 +1,1297 @@
+<!-- views/admin/dashboard.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Admin Dashboard - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* ============ SVG ICON SYSTEM ============ */
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1em;
+      height: 1em;
+      vertical-align: -0.125em;
+      flex-shrink: 0;
+    }
+    .icon svg { width: 100%; height: 100%; display: block; }
+
+    /* ============ PAGE HEADER ============ */
+    .page-header-enhanced {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 0px;
+      background: none;
+      border: none;
+      border-radius: 0;
+      position: relative;
+      overflow: visible;
+    }
+    .page-header-enhanced::before {
+      content: none;
+    }
+    .page-title-enhanced {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+      color: var(--text-primary);
+    }
+    .page-subtitle-enhanced {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10B981;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .live-badge .pulse {
+      width: 6px;
+      height: 6px;
+      background: #10B981;
+      border-radius: 50%;
+      animation: pulse-live 2s ease-in-out infinite;
+    }
+    @keyframes pulse-live {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+      50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    }
+
+    /* ============ ADMIN STATS ============ */
+    .stats-enhanced {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card-enhanced {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .stat-card-enhanced::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent-color, #6366F1);
+    }
+    .stat-card-enhanced:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-color, #6366F1);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    }
+    .stat-card-enhanced .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .stat-icon-box {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 20px;
+      background: color-mix(in srgb, var(--accent-color, #6366F1) 15%, transparent);
+      color: var(--accent-color, #6366F1);
+    }
+    .stat-trend {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-trend.up { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+    .stat-trend.down { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+    .stat-trend.neutral { background: rgba(156, 163, 175, 0.1); color: #9CA3AF; }
+    .stat-value-enhanced {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label-enhanced {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ============ QUICK ACTIONS ============ */
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .quick-action-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .quick-action-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-color, #6366F1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    .quick-action-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .quick-action-icon.primary { background: rgba(99, 102, 241, 0.15); color: #6366F1; }
+    .quick-action-icon.success { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+    .quick-action-icon.warning { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+    .quick-action-icon.danger { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+    .quick-action-icon.info { background: rgba(6, 182, 212, 0.15); color: #06B6D4; }
+    .quick-action-text { flex: 1; }
+    .quick-action-text h4 { margin: 0 0 2px 0; font-size: 14px; font-weight: 600; }
+    .quick-action-text p { margin: 0; font-size: 11px; color: var(--text-muted); }
+    .quick-action-arrow { color: var(--text-muted); font-size: 16px; }
+
+    /* ============ RECENT ACTIVITY & SYSTEM STATUS ============ */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .admin-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 18px;
+      transition: all 0.3s ease;
+    }
+    .admin-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .admin-card-header h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .admin-card-header .badge-count {
+      background: rgba(99, 102, 241, 0.15);
+      color: #6366F1;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ============ ACTIVITY LIST ============ */
+    .activity-list {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .activity-list::-webkit-scrollbar { width: 4px; }
+    .activity-list::-webkit-scrollbar-track { background: var(--bg-subtle); border-radius: 4px; }
+    .activity-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .activity-icon.start { background: rgba(16, 185, 129, 0.12); color: #10B981; }
+    .activity-icon.stop { background: rgba(239, 68, 68, 0.12); color: #EF4444; }
+    .activity-icon.create { background: rgba(99, 102, 241, 0.12); color: #6366F1; }
+    .activity-icon.delete { background: rgba(239, 68, 68, 0.12); color: #EF4444; }
+    .activity-icon.edit { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
+    .activity-icon.login { background: rgba(6, 182, 212, 0.12); color: #06B6D4; }
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .activity-content .title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .activity-content .desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .activity-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ============ SYSTEM STATUS ============ */
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .status-item:last-child { border-bottom: none; }
+    .status-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .status-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .status-dot.green { background: #10B981; }
+    .status-dot.yellow { background: #F59E0B; }
+    .status-dot.red { background: #EF4444; }
+
+    /* ============ VM GRID (for admin) ============ */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .section-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .vm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 18px;
+    }
+    .vm-card-enhanced {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 18px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .vm-card-enhanced::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      transition: all 0.3s;
+    }
+    .vm-card-enhanced.running::before { background: linear-gradient(90deg, #10B981, #06B6D4); }
+    .vm-card-enhanced.stopped::before { background: linear-gradient(90deg, #6B7280, #4B5563); }
+    .vm-card-enhanced.paused::before { background: linear-gradient(90deg, #F59E0B, #F97316); }
+    .vm-card-enhanced:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .vm-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .vm-title-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+    .vm-os-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.08));
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      padding: 6px;
+    }
+    .vm-os-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .vm-name-enhanced {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 3px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vm-meta-enhanced {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vm-owner-tag {
+      background: rgba(99, 102, 241, 0.1);
+      color: #6366F1;
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    .status-badge.running {
+      background: rgba(16, 185, 129, 0.12);
+      color: #10B981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-badge.stopped {
+      background: rgba(107, 114, 128, 0.12);
+      color: #9CA3AF;
+      border: 1px solid rgba(107, 114, 128, 0.3);
+    }
+    .status-badge.paused {
+      background: rgba(245, 158, 11, 0.12);
+      color: #F59E0B;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .status-badge .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .status-badge.running .status-dot {
+      animation: pulse-live 2s ease-in-out infinite;
+    }
+
+    .vm-specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .spec-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .spec-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .spec-icon.mem { background: rgba(16, 185, 129, 0.12); color: #10B981; }
+    .spec-icon.cpu { background: rgba(236, 72, 153, 0.12); color: #EC4899; }
+    .spec-icon.disk { background: rgba(6, 182, 212, 0.12); color: #06B6D4; }
+    .spec-icon.net { background: rgba(59, 130, 246, 0.12); color: #3B82F6; }
+    .spec-content {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+    .spec-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .spec-value {
+      font-size: 12px;
+      color: var(--text-primary);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vm-actions-enhanced {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-action:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+    .btn-action.start {
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-color: transparent;
+      color: white;
+    }
+    .btn-action.start:hover {
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      color: white;
+    }
+    .btn-action.stop {
+      background: linear-gradient(135deg, #EF4444, #DC2626);
+      border-color: transparent;
+      color: white;
+    }
+    .btn-action.stop:hover {
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+      color: white;
+    }
+    .btn-action.primary {
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      border-color: transparent;
+      color: white;
+    }
+    .btn-action.primary:hover {
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+      color: white;
+    }
+
+    .btn-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 10px;
+      color: #6366F1;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-refresh:hover {
+      background: rgba(99, 102, 241, 0.18);
+      transform: translateY(-1px);
+    }
+    .btn-refresh.spinning svg { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-enhanced {
+      background: var(--bg-card);
+      border: 1px dashed var(--border-color);
+      border-radius: 16px;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .empty-icon-wrap {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.05));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6366F1;
+      font-size: 36px;
+    }
+    .empty-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+    .empty-desc { color: var(--text-muted); font-size: 13px; max-width: 400px; margin: 0 auto 20px; }
+
+    .skeleton-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 18px;
+      height: 280px;
+      position: relative;
+      overflow: hidden;
+    }
+    .skeleton-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+
+    /* ============ TOASTS ============ */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 380px;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-left: 3px solid #6366F1;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      animation: slideInToast 0.3s ease-out;
+      min-width: 300px;
+    }
+    .toast.removing { animation: slideOutToast 0.3s ease-out forwards; }
+    .toast-success { border-left-color: #10B981; }
+    .toast-error { border-left-color: #EF4444; }
+    .toast-warning { border-left-color: #F59E0B; }
+    .toast-info { border-left-color: #6366F1; }
+    .toast-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .toast-success .toast-icon { color: #10B981; }
+    .toast-error .toast-icon { color: #EF4444; }
+    .toast-warning .toast-icon { color: #F59E0B; }
+    .toast-info .toast-icon { color: #6366F1; }
+    .toast-message { flex: 1; color: var(--text-primary); font-size: 13px; font-weight: 500; }
+    .toast-close {
+      background: transparent; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .toast-close:hover { color: var(--text-primary); }
+
+    @keyframes slideInToast {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutToast {
+      to { transform: translateX(120%); opacity: 0; }
+    }
+    @keyframes slideInModal {
+      from { transform: scale(0.9) translateY(-20px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 992px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 768px) {
+      .vm-actions-enhanced { grid-template-columns: 1fr; }
+      .vm-specs { grid-template-columns: 1fr; }
+      .page-header-enhanced { padding: 0px; }
+      .page-title-enhanced { font-size: 20px; }
+      .quick-actions-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .quick-actions-grid { grid-template-columns: 1fr; }
+      .stats-enhanced { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SVG ICON DEFINITIONS -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/>
+      <line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/>
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+    </symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+    </symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+      <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+      <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+      <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+      <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+    </symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
+    </symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/admin/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+
+      <!-- Enhanced Header -->
+      <div class="page-header-enhanced">
+        <div style="position: relative; z-index: 1;">
+          <h1 class="page-title-enhanced">
+            Admin Dashboard
+          </h1>
+          <p class="page-subtitle-enhanced">
+            Welcome back, <strong style="color: var(--accent-primary);"><%= user.username %></strong>
+            <span class="live-badge"><span class="pulse"></span>Live · Auto-refresh 30s</span>
+            <span id="lastUpdate" style="opacity: 0.7;"></span>
+          </p>
+        </div>
+        <div style="position: relative; z-index: 1; display: flex; gap: 10px;">
+          <a href="/admin/vm-create" class="btn-refresh" style="background: white; color: #333; border-color: transparent;">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            New VM
+          </a>
+          <button class="btn-refresh" id="refreshBtn" onclick="loadAdminData()">
+            <svg class="icon"><use href="#i-refresh"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-enhanced">
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-indigo);">
+          <div class="stat-header">
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-server"/></svg></div>
+            <span class="stat-trend neutral">Total</span>
+          </div>
+          <div class="stat-value-enhanced" id="totalVMs">—</div>
+          <div class="stat-label-enhanced">Total Virtual Machines</div>
+        </div>
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-emerald);">
+          <div class="stat-header">
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-play"/></svg></div>
+            <span class="stat-trend up">Active</span>
+          </div>
+          <div class="stat-value-enhanced" id="runningVMs">—</div>
+          <div class="stat-label-enhanced">Running</div>
+        </div>
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-red);">
+          <div class="stat-header">
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-stop"/></svg></div>
+            <span class="stat-trend down">Idle</span>
+          </div>
+          <div class="stat-value-enhanced" id="stoppedVMs">—</div>
+          <div class="stat-label-enhanced">Stopped</div>
+        </div>
+        <div class="stat-card-enhanced" style="--accent-color: var(--color-violet);">
+          <div class="stat-header">
+            <div class="stat-icon-box"><svg class="icon"><use href="#i-users"/></svg></div>
+            <span class="stat-trend neutral">Users</span>
+          </div>
+          <div class="stat-value-enhanced" id="totalUsers">—</div>
+          <div class="stat-label-enhanced">Registered Users</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-grid">
+        <a href="/admin/vm-create" class="quick-action-card">
+          <div class="quick-action-icon primary"><svg class="icon"><use href="#i-plus"/></svg></div>
+          <div class="quick-action-text">
+            <h4>Create VM</h4>
+            <p>Provision new virtual machine</p>
+          </div>
+          <span class="quick-action-arrow">→</span>
+        </a>
+        <a href="/admin/users" class="quick-action-card">
+          <div class="quick-action-icon info"><svg class="icon"><use href="#i-users"/></svg></div>
+          <div class="quick-action-text">
+            <h4>Manage Users</h4>
+            <p>Add or modify users</p>
+          </div>
+          <span class="quick-action-arrow">→</span>
+        </a>
+        <a href="/admin/templates" class="quick-action-card">
+          <div class="quick-action-icon warning"><svg class="icon"><use href="#i-disk"/></svg></div>
+          <div class="quick-action-text">
+            <h4>OS Templates</h4>
+            <p>Manage VM templates</p>
+          </div>
+          <span class="quick-action-arrow">→</span>
+        </a>
+        <a href="/admin/settings" class="quick-action-card">
+          <div class="quick-action-icon success"><svg class="icon"><use href="#i-settings"/></svg></div>
+          <div class="quick-action-text">
+            <h4>Settings</h4>
+            <p>Panel configuration</p>
+          </div>
+          <span class="quick-action-arrow">→</span>
+        </a>
+      </div>
+
+      <!-- Admin Grid: Recent Activity & System Status -->
+      <div class="admin-grid">
+        <!-- Recent Activity -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3>Recent Activity</h3>
+            <span class="badge-count" id="activityCount">0</span>
+          </div>
+          <div class="activity-list" id="activityList">
+            <div style="text-align: center; color: var(--text-muted); padding: 30px 0; font-size: 13px;">
+              Loading activity...
+            </div>
+          </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3>System Status</h3>
+            <span class="badge-count" style="background: var(--color-emerald-light); color: var(--color-emerald);">Online</span>
+          </div>
+          <div id="systemStatus">
+            <div class="status-item">
+              <span class="status-label">QEMU/KVM</span>
+              <span class="status-value"><span class="status-dot green"></span>Running</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Database</span>
+              <span class="status-value"><span class="status-dot green"></span>Connected</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Node</span>
+              <span class="status-value"><span class="status-dot green"></span>localhost</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Total VMs</span>
+              <span class="status-value" id="statusTotalVMs">—</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">CPU Usage</span>
+              <span class="status-value" id="statusCpu">—</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Memory Usage</span>
+              <span class="status-value" id="statusMemory">—</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Panel Version</span>
+              <span class="status-value"><%= panelVersion || 'V1.0' %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All VMs Section -->
+      <div class="section-header">
+        <h3>All Virtual Machines</h3>
+        <span class="badge-count" id="vmCount">0</span>
+      </div>
+      <div id="allVMContainer">
+        <div class="vm-grid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+function formatMem(mem) {
+  if (!mem) return '—';
+  return mem >= 1024 ? (mem / 1024).toFixed(1) + ' GB' : mem + ' MB';
+}
+
+function formatTime() {
+  const d = new Date();
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ============ TOAST SYSTEM ============
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer') || createToastContainer();
+  const iconMap = { success: 'i-check', error: 'i-x', warning: 'i-alert', info: 'i-info' };
+  
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon"><svg class="icon" style="width:18px;height:18px"><use href="#${iconMap[type] || 'i-info'}"/></svg></span>
+    <span class="toast-message">${escHtml(msg)}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.id = 'toastContainer';
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+  return container;
+}
+
+// ============ CONFIRMATION MODAL ============
+function confirmAction(msg, title) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-card);border-radius:14px;width:100%;max-width:450px;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:slideInModal 0.3s ease-out;overflow:hidden;';
+    
+    modal.innerHTML = `
+      <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:rgba(245,158,11,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#F59E0B;">
+          <svg class="icon" style="width:20px;height:20px;"><use href="#i-alert"/></svg>
+        </div>
+        <h2 style="margin:0;color:var(--text-primary);font-size:16px;font-weight:700;">${escHtml(title)}</h2>
+      </div>
+      <div style="padding:20px 22px;">
+        <p style="margin:0;color:var(--text-secondary);font-size:14px;line-height:1.5;">${escHtml(msg)}</p>
+      </div>
+      <div style="padding:14px 22px 18px;border-top:1px solid var(--border-subtle);display:flex;gap:10px;justify-content:flex-end;">
+        <button id="cancelBtn" style="padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);">Cancel</button>
+        <button id="confirmBtn" style="padding:9px 18px;border-radius:8px;cursor:pointer;border:none;font-weight:600;font-size:13px;background:linear-gradient(135deg, var(--color-amber), var(--color-orange));color:var(--text-primary);box-shadow:0 4px 12px var(--color-amber-light);">Confirm</button>
+      </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    const cleanup = () => overlay.remove();
+    modal.querySelector('#confirmBtn').onclick = () => { cleanup(); resolve(true); };
+    modal.querySelector('#cancelBtn').onclick = () => { cleanup(); resolve(false); };
+    overlay.onclick = (e) => { if (e.target === overlay) { cleanup(); resolve(false); } };
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { cleanup(); resolve(false); document.removeEventListener('keydown', esc); }
+    });
+  });
+}
+
+// ============ VM ACTIONS ============
+async function vmAction(action, vmId, vmName) {
+  const confirmed = await confirmAction(
+    `Are you sure you want to ${action} VM "${vmName}"?`,
+    action.charAt(0).toUpperCase() + action.slice(1) + ' Virtual Machine'
+  );
+  if (!confirmed) return;
+  
+  try {
+    showToast(`${action.charAt(0).toUpperCase() + action.slice(1)}ing VM...`, 'info');
+    const res = await fetch(`/api/vms/${vmId}/${action}`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`VM ${action}ed successfully`, 'success');
+      setTimeout(loadAdminData, 1200);
+    } else {
+      showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+    }
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ============ ANIMATE NUMBER ============
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  const duration = 600;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(current + (target - current) * eased);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ============ RENDER VM CARD (Admin) ============
+function renderVMCard(vm) {
+  const icon = vm.template_icon;
+  const displayIcon = (icon && icon.startsWith('http')) ? icon : 'https://i.imgur.com/wu0Ob6B.png';
+  const status = vm.status || 'stopped';
+  const ownerName = vm.owner_username || 'Unassigned';
+  
+  return `
+    <div class="vm-card-enhanced ${status}">
+      <div class="vm-card-header">
+        <div class="vm-title-block">
+          <div class="vm-os-icon">
+            <img src="${displayIcon}" alt="${escHtml(vm.template_name || 'OS')}" onerror="this.src='https://i.imgur.com/wu0Ob6B.png'">
+          </div>
+          <div style="min-width: 0; flex: 1;">
+            <div class="vm-name-enhanced">${escHtml(vm.vm_name)}</div>
+            <div class="vm-meta-enhanced">
+              <span>${escHtml(vm.template_name || vm.os_type || 'Custom OS')}</span>
+              <span class="vm-owner-tag">👤 ${escHtml(ownerName)}</span>
+              <span class="vm-id-chip">#${vm.vm_id}</span>
+            </div>
+          </div>
+        </div>
+        <span class="status-badge ${status}">
+          <span class="status-dot"></span>${status}
+        </span>
+      </div>
+
+      <div class="vm-specs">
+        <div class="spec-item">
+          <div class="spec-icon mem"><svg class="icon"><use href="#i-mem"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">Memory</div>
+            <div class="spec-value">${vm.memory ? vm.memory + ' MB' : '—'}</div>
+          </div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-icon cpu"><svg class="icon"><use href="#i-cpu"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">vCPUs</div>
+            <div class="spec-value">${vm.cpus || '—'} Cores</div>
+          </div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-icon disk"><svg class="icon"><use href="#i-disk"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">Storage</div>
+            <div class="spec-value">${vm.disk_size || '—'}</div>
+          </div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-icon net"><svg class="icon"><use href="#i-network"/></svg></div>
+          <div class="spec-content">
+            <div class="spec-label">Network</div>
+            <div class="spec-value">${vm.ipv4_address || 'DHCP'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vm-actions-enhanced">
+        ${status === 'stopped'
+          ? `<button class="btn-action start" onclick="vmAction('start', ${vm.vm_id}, '${escHtml(vm.vm_name)}')">
+              <svg class="icon"><use href="#i-play"/></svg> Start
+            </button>`
+          : `<button class="btn-action stop" onclick="vmAction('stop', ${vm.vm_id}, '${escHtml(vm.vm_name)}')">
+              <svg class="icon"><use href="#i-stop"/></svg> Stop
+            </button>`
+        }
+        <a href="/admin/vm/${vm.vm_id}" class="btn-action primary">
+          <svg class="icon"><use href="#i-info"/></svg> Details
+        </a>
+        <a href="/admin/vm/${vm.vm_id}/console" class="btn-action">
+          <svg class="icon"><use href="#i-terminal"/></svg> Console
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+// ============ LOAD ADMIN DATA ============
+async function loadAdminData() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) btn.classList.add('spinning');
+  
+  try {
+    // Fetch admin dashboard stats
+    const statsRes = await fetch('/api/admin/dashboard');
+    if (statsRes.ok) {
+      const stats = await statsRes.json();
+      animateNumber('totalVMs', stats.totalVMs || 0);
+      animateNumber('runningVMs', stats.runningVMs || 0);
+      animateNumber('stoppedVMs', (stats.totalVMs || 0) - (stats.runningVMs || 0));
+      animateNumber('totalUsers', stats.totalUsers || 0);
+      document.getElementById('statusTotalVMs').textContent = stats.totalVMs || 0;
+    }
+
+    // Fetch all VMs
+    const vmsRes = await fetch('/api/admin/vms');
+    if (!vmsRes.ok) throw new Error('Failed to load VMs');
+    const vms = await vmsRes.json();
+    
+    document.getElementById('vmCount').textContent = vms.length;
+    document.getElementById('lastUpdate').textContent = `· Updated ${formatTime()}`;
+    
+    const container = document.getElementById('allVMContainer');
+    
+    if (vms.length === 0) {
+      container.innerHTML = `
+        <div class="empty-enhanced">
+          <div class="empty-icon-wrap"><svg class="icon"><use href="#i-server"/></svg></div>
+          <div class="empty-title">No Virtual Machines</div>
+          <div class="empty-desc">Get started by creating your first virtual machine.</div>
+          <a href="/admin/vm-create" class="btn-refresh" style="background: linear-gradient(135deg, var(--color-indigo), var(--color-violet)); color: var(--text-primary); border-color: transparent;">
+            <svg class="icon"><use href="#i-plus"/></svg> Create VM
+          </a>
+        </div>`;
+      return;
+    }
+    
+    container.innerHTML = `
+      <div class="vm-grid">
+        ${vms.map(vm => renderVMCard(vm)).join('')}
+      </div>`;
+      
+  } catch(e) {
+    document.getElementById('allVMContainer').innerHTML = `
+      <div class="empty-enhanced">
+        <div class="empty-icon-wrap" style="color: var(--color-red); background: linear-gradient(135deg, var(--color-red-light), rgba(239,68,68,0.05));">
+          <svg class="icon"><use href="#i-alert"/></svg>
+        </div>
+        <div class="empty-title">Failed to Load VMs</div>
+        <div class="empty-desc">${escHtml(e.message)}</div>
+        <button class="btn-refresh" onclick="loadAdminData()">
+          <svg class="icon"><use href="#i-refresh"/></svg> Try Again
+        </button>
+      </div>`;
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove('spinning'), 500);
+  }
+
+  // Load recent activity
+  loadRecentActivity();
+}
+
+// ============ LOAD RECENT ACTIVITY ============
+async function loadRecentActivity() {
+  try {
+    // Try to fetch recent logs from all VMs
+    const res = await fetch('/api/admin/activity?limit=10');
+    if (res.ok) {
+      const activities = await res.json();
+      const container = document.getElementById('activityList');
+      document.getElementById('activityCount').textContent = activities.length;
+      
+      if (activities.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 30px 0; font-size: 13px;">
+            No recent activity
+          </div>`;
+        return;
+      }
+      
+      const iconMap = {
+        'start': 'start',
+        'stop': 'stop',
+        'create': 'create',
+        'delete': 'delete',
+        'edit': 'edit',
+        'login': 'login'
+      };
+      
+      container.innerHTML = activities.map(act => {
+        const iconType = iconMap[act.action] || 'edit';
+        return `
+          <div class="activity-item">
+            <div class="activity-icon ${iconType}">
+              <svg class="icon"><use href="#i-${act.action === 'start' ? 'play' : act.action === 'stop' ? 'stop' : act.action === 'create' ? 'plus' : act.action === 'delete' ? 'x' : act.action === 'login' ? 'users' : 'info'}"/></svg>
+            </div>
+            <div class="activity-content">
+              <div class="title">${escHtml(act.message || act.action)}</div>
+              <div class="desc">VM #${act.vm_id} · ${escHtml(act.status || '')}</div>
+            </div>
+            <div class="activity-time">${act.timestamp ? new Date(act.timestamp).toLocaleTimeString() : ''}</div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      // Fallback: show some mock activities or empty state
+      document.getElementById('activityList').innerHTML = `
+        <div style="text-align: center; color: var(--text-muted); padding: 20px 0; font-size: 13px;">
+          Activity feed unavailable
+        </div>`;
+    }
+  } catch(e) {
+    // Silent fail for activity
+    document.getElementById('activityList').innerHTML = `
+      <div style="text-align: center; color: var(--text-muted); padding: 20px 0; font-size: 13px;">
+        No recent activity
+      </div>`;
+  }
+}
+
+// ============ SYSTEM STATUS ============
+async function loadSystemStatus() {
+  try {
+    // Fetch system info
+    const res = await fetch('/api/system/status');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.cpu) document.getElementById('statusCpu').textContent = data.cpu;
+      if (data.memory) document.getElementById('statusMemory').textContent = data.memory;
+    }
+  } catch(e) {
+    // Silent fail
+  }
+}
+
+// ============ INITIAL LOAD ============
+loadAdminData();
+loadSystemStatus();
+setInterval(loadAdminData, 30000);
+setInterval(loadSystemStatus, 60000);
+</script>
+</body>
+</html>
