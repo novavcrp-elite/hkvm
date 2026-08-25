@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Create User - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+
+  <%- include('../partials/admin/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+
+      <!-- Page Header with Breadcrumb -->
+      <div class="page-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <a href="/admin/users" style="color: var(--text-secondary); font-size: 13px; text-decoration: none;">
+              <i class="fas fa-arrow-left" style="color: #6366F1;"></i> Users
+            </a>
+            <span style="color: var(--text-muted);">/</span>
+            <span style="font-size: 13px; color: var(--text-muted);">Create New User</span>
+          </div>
+          <h1 class="page-title"><i class="fas fa-user-plus" style="color: #10B981;"></i> Create New User</h1>
+          <p style="color: var(--text-muted); margin-top: 4px;">Add a new user account to the system</p>
+        </div>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; margin-top: 26px;">
+
+        <!-- LEFT SIDE: FORM -->
+        <div>
+
+          <!-- Alert Section -->
+          <div id="alertBox" style="display: none; margin-bottom: 20px;"></div>
+
+          <!-- User Information Card -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-user" style="color: #6366F1;"></i> User Information</div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Username <span class="required">*</span></label>
+                <input type="text" class="form-control" id="username" placeholder="e.g., john_doe" autocomplete="off">
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Alphanumeric and underscores only, 3-20 characters</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" placeholder="user@example.com">
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Optional email address for account recovery</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="fullName" placeholder="John Doe">
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Card -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-lock" style="color: #EF4444;"></i> Security</div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Password <span class="required">*</span></label>
+                <div style="position: relative;">
+                  <input type="password" class="form-control" id="password" placeholder="Min 6 characters" autocomplete="off" style="padding-right: 40px;">
+                  <button type="button" class="btn btn-ghost" onclick="togglePasswordVisibility('password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: none; background: none;">
+                    <i class="fas fa-eye" id="passwordEyeIcon"></i>
+                  </button>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Minimum 6 characters recommended</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Confirm Password <span class="required">*</span></label>
+                <div style="position: relative;">
+                  <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm password" autocomplete="off" style="padding-right: 40px;">
+                  <button type="button" class="btn btn-ghost" onclick="togglePasswordVisibility('confirmPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: none; background: none;">
+                    <i class="fas fa-eye" id="confirmPasswordEyeIcon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div style="padding: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px;">
+                <div style="font-size: 12px; font-weight: 600; color: #10B981; margin-bottom: 8px;">
+                  <i class="fas fa-info-circle"></i> Password Requirements
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+                  • At least 6 characters<br>
+                  • Use a mix of uppercase and lowercase<br>
+                  • Include numbers and special characters for better security
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role & Permissions Card -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-shield" style="color: #8B5CF6;"></i> Role & Permissions</div>
+            </div>
+            <div class="card-body">
+              <label class="form-label">User Role <span class="required">*</span></label>
+              <div class="radio-cards" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="radio-card">
+                  <input type="radio" name="role" id="roleUser" value="user" checked onchange="updatePreview()">
+                  <label for="roleUser" class="radio-card-label">
+                    <div class="radio-card-icon"><i class="fas fa-user" style="color: #3B82F6; font-size: 20px;"></i></div>
+                    <div class="radio-card-title">Regular User</div>
+                    <div class="radio-card-desc">Limited access to own VMs</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
+                      • View own VMs<br>
+                      • Create VMs<br>
+                      • Manage own profile
+                    </div>
+                  </label>
+                </div>
+                <div class="radio-card">
+                  <input type="radio" name="role" id="roleAdmin" value="admin" onchange="updatePreview()">
+                  <label for="roleAdmin" class="radio-card-label">
+                    <div class="radio-card-icon"><i class="fas fa-crown" style="color: #F59E0B; font-size: 20px;"></i></div>
+                    <div class="radio-card-title">Administrator</div>
+                    <div class="radio-card-desc">Full system access</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
+                      • Manage all users<br>
+                      • System settings<br>
+                      • View all VMs & resources
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div style="display: flex; gap: 10px;">
+            <a href="/admin/users" class="btn btn-ghost" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+            <button class="btn btn-primary" id="submitBtn" onclick="createUser()" style="flex: 1;">
+              <i class="fas fa-save"></i> Create User
+            </button>
+          </div>
+
+        </div>
+
+        <!-- RIGHT SIDE: SUMMARY BOX -->
+        <div style="height: fit-content; position: sticky; top: 100px;">
+          
+          <!-- Summary Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-eye" style="color: #3B82F6;"></i> Preview</div>
+            </div>
+            <div class="card-body" style="padding: 16px;">
+              
+              <!-- User Avatar -->
+              <div style="text-align: center; margin-bottom: 16px;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--gradient-primary); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; font-weight: 700;">
+                  <span id="previewAvatar">?</span>
+                </div>
+                <div style="font-size: 14px; font-weight: 600; color: var(--text-primary);" id="previewUsername">Username</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="previewRole">Regular User</div>
+              </div>
+
+              <!-- Divider -->
+              <div style="height: 1px; background: var(--border-subtle); margin: 16px 0;"></div>
+
+              <!-- Info Items -->
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                
+                <!-- Email -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Email</div>
+                  <div style="font-size: 13px; color: var(--text-secondary);" id="previewEmail">Not provided</div>
+                </div>
+
+                <!-- Full Name -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Full Name</div>
+                  <div style="font-size: 13px; color: var(--text-secondary);" id="previewFullName">Not provided</div>
+                </div>
+
+                <!-- Password Strength -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Password Strength</div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="flex: 1; height: 4px; background: var(--bg-track); border-radius: 2px; overflow: hidden;">
+                      <div style="height: 100%; background: var(--accent-red); width: 0%;" id="previewPasswordStrength"></div>
+                    </div>
+                    <span style="font-size: 11px; color: var(--text-muted);" id="previewPasswordText">-</span>
+                  </div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">Status</div>
+                  <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px;">
+                    <span style="width: 6px; height: 6px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
+                    <span style="font-size: 12px; color: #10B981; font-weight: 500;">Active</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Divider -->
+              <div style="height: 1px; background: var(--border-subtle); margin: 16px 0;"></div>
+
+              <!-- Info Box -->
+              <div style="padding: 10px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">
+                  <i class="fas fa-info-circle" style="color: #3B82F6; margin-right: 6px;"></i>
+                  <strong style="color: var(--text-secondary);">Tip:</strong> All users are automatically created with active status.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+function togglePasswordVisibility(fieldId) {
+  const field = document.getElementById(fieldId);
+  const icon = fieldId === 'password' ? document.getElementById('passwordEyeIcon') : document.getElementById('confirmPasswordEyeIcon');
+  
+  if (field.type === 'password') {
+    field.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    field.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+// Update preview when form changes
+function updatePreview() {
+  const username = document.getElementById('username').value.trim() || 'Username';
+  const email = document.getElementById('email').value.trim() || 'Not provided';
+  const fullName = document.getElementById('fullName').value.trim() || 'Not provided';
+  const password = document.getElementById('password').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
+
+  // Update avatar
+  const firstChar = (username.charAt(0) || '?').toUpperCase();
+  document.getElementById('previewAvatar').textContent = firstChar;
+
+  // Update user info
+  document.getElementById('previewUsername').textContent = username;
+  document.getElementById('previewRole').textContent = role === 'admin' ? '🔑 Administrator' : '👤 Regular User';
+  document.getElementById('previewEmail').textContent = email;
+  document.getElementById('previewFullName').textContent = fullName;
+
+  // Update password strength
+  let strength = 0;
+  let strengthText = 'Weak';
+  let strengthColor = 'var(--accent-red)';
+
+  if (password) {
+    if (password.length >= 6) strength += 30;
+    if (password.length >= 10) strength += 20;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength += 25;
+    if (/\d/.test(password)) strength += 15;
+    if (/[!@#$%^&*]/.test(password)) strength += 10;
+
+    if (strength >= 80) { strengthText = 'Strong'; strengthColor = 'var(--accent-green)'; }
+    else if (strength >= 50) { strengthText = 'Medium'; strengthColor = 'var(--accent-orange)'; }
+  }
+
+  document.getElementById('previewPasswordStrength').style.width = strength + '%';
+  document.getElementById('previewPasswordStrength').style.background = strengthColor;
+  document.getElementById('previewPasswordText').textContent = strengthText;
+}
+
+function showAlert(message, type = 'error') {
+  const alertBox = document.getElementById('alertBox');
+  const icons = { error: 'fa-times-circle', success: 'fa-check-circle', warning: 'fa-exclamation-circle', info: 'fa-info-circle' };
+  const colors = { error: '#EF4444', success: '#10B981', warning: '#F59E0B', info: '#3B82F6' };
+  
+  alertBox.innerHTML = `
+    <div style="padding: 12px; background: rgba(${type === 'error' ? '239, 68, 68' : type === 'success' ? '16, 185, 129' : type === 'warning' ? '245, 158, 11' : '59, 130, 246'}, 0.1); border: 1px solid rgba(${type === 'error' ? '239, 68, 68' : type === 'success' ? '16, 185, 129' : type === 'warning' ? '245, 158, 11' : '59, 130, 246'}, 0.3); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+      <i class="fas ${icons[type]}" style="color: ${colors[type]};"></i>
+      <span style="color: ${colors[type]}; font-size: 13px;">${message}</span>
+    </div>
+  `;
+  alertBox.style.display = 'block';
+}
+
+function hideAlert() {
+  document.getElementById('alertBox').style.display = 'none';
+}
+
+async function createUser() {
+  hideAlert();
+  
+  const username = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const fullName = document.getElementById('fullName').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
+  
+  // Validation
+  if (!username) { showAlert('Username is required'); return; }
+  if (username.length < 3 || username.length > 20) { showAlert('Username must be 3-20 characters'); return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showAlert('Username can only contain letters, numbers, and underscores'); return; }
+  
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('Invalid email address'); return; }
+  
+  if (!password) { showAlert('Password is required'); return; }
+  if (password.length < 6) { showAlert('Password must be at least 6 characters'); return; }
+  if (password !== confirmPassword) { showAlert('Passwords do not match'); return; }
+  
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  const originalHtml = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+  
+  try {
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email: email || null, full_name: fullName || null, password, role })
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok && data.success) {
+      showAlert(`User "${username}" created successfully!`, 'success');
+      setTimeout(() => {
+        window.location.href = '/admin/users';
+      }, 1500);
+    } else {
+      throw new Error(data.error || 'Failed to create user');
+    }
+  } catch(e) {
+    showAlert(e.message);
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalHtml;
+  }
+}
+
+// Add event listeners for real-time preview
+document.addEventListener('DOMContentLoaded', () => {
+  const inputFields = ['username', 'email', 'fullName', 'password'];
+  inputFields.forEach(id => {
+    const field = document.getElementById(id);
+    if (field) field.addEventListener('input', updatePreview);
+  });
+  document.getElementById('username').focus();
+  updatePreview();
+});
+</script>
+</body>
+</html>
+
