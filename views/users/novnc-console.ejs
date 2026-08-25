@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'VM Console - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+  <!-- noVNC client -->
+  <script src="https://cdn.jsdelivr.net/npm/@novnc/novnc@1.5.0/core/rfb.js" type="module"></script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
+    .console-wrapper { display: flex; flex-direction: column; height: 100vh; }
+    .console-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; background: #1a1a2e; border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .console-header .title { display: flex; align-items: center; gap: 10px; }
+    .console-header .title h3 { font-size: 14px; color: #fff; margin: 0; }
+    .console-header .status { font-size: 12px; display: flex; align-items: center; gap: 6px; }
+    .console-header .actions { display: flex; gap: 6px; }
+    .console-header .btn {
+      padding: 6px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+      background: rgba(255,255,255,0.05); color: #fff; font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; gap: 5px; transition: all 0.2s;
+    }
+    .console-header .btn:hover { background: rgba(255,255,255,0.1); }
+    .console-header .btn.danger { border-color: rgba(239,68,68,0.3); color: #EF4444; }
+    .console-header .btn.danger:hover { background: rgba(239,68,68,0.1); }
+    .console-header .btn.primary { border-color: rgba(99,102,241,0.3); color: #6366F1; }
+    .console-header .btn.primary:hover { background: rgba(99,102,241,0.1); }
+    .console-body { flex: 1; position: relative; overflow: hidden; background: #000; }
+    #vncCanvas { width: 100%; height: 100%; display: block; }
+    .console-loading {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center; color: #888;
+    }
+    .console-loading .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #6366F1; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot-connected { background: #10B981; }
+    .dot-disconnected { background: #EF4444; }
+    .dot-connecting { background: #F59E0B; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  </style>
+</head>
+<body>
+
+<div class="console-wrapper">
+  <!-- Header -->
+  <div class="console-header">
+    <div class="title">
+      <h3 id="vmName">Loading VM...</h3>
+      <span class="status" id="connStatus">
+        <span class="dot dot-connecting"></span>
+        <span>Connecting...</span>
+      </span>
+    </div>
+    <div class="actions">
+      <button class="btn primary" onclick="reconnect()" id="reconnectBtn" title="Reconnect">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Reconnect
+      </button>
+      <button class="btn" onclick="toggleFullscreen()" id="fsBtn" title="Fullscreen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+        Fullscreen
+      </button>
+      <a href="/vm/<%= vmId %>" class="btn" title="Back to VM">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </a>
+      <button class="btn danger" onclick="disconnect()" id="disconnectBtn" title="Disconnect">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Disconnect
+      </button>
+    </div>
+  </div>
+
+  <!-- VNC Canvas Area -->
+  <div class="console-body" id="consoleBody">
+    <div class="console-loading" id="loadingIndicator">
+      <div class="spinner"></div>
+      <div>Connecting to VM console...</div>
+      <div style="font-size: 11px; margin-top: 8px; color: #666;">VM ID: <%= vmId %></div>
+    </div>
+    <canvas id="vncCanvas" style="display: none;"></canvas>
+  </div>
+</div>
+
+<script type="module">
+const vmId = <%= vmId %>;
+let rfb = null;
+let wsUrl = null;
+
+// Status management
+function setStatus(state, text) {
+  const el = document.getElementById('connStatus');
+  const dotClass = state === 'connected' ? 'dot-connected' : state === 'disconnected' ? 'dot-disconnected' : 'dot-connecting';
+  el.innerHTML = `<span class="dot ${dotClass}"></span><span>${text}</span>`;
+}
+
+function showCanvas(show) {
+  document.getElementById('loadingIndicator').style.display = show ? 'none' : 'block';
+  document.getElementById('vncCanvas').style.display = show ? 'block' : 'none';
+}
+
+// Get VNC token from backend
+async function getToken() {
+  try {
+    const res = await fetch(`/api/novnc/${vmId}/token`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to get console token');
+    return data;
+  } catch(e) {
+    throw e;
+  }
+}
+
+// Connect to VNC
+async function connect() {
+  setStatus('connecting', 'Connecting...');
+
+  try {
+    const tokenData = await getToken();
+    wsUrl = tokenData.wsUrl;
+
+    // Use RFB from noVNC module
+    const { default: RFB } = await import('https://cdn.jsdelivr.net/npm/@novnc/novnc@1.5.0/core/rfb.js');
+
+    const canvas = document.getElementById('vncCanvas');
+    showCanvas(true);
+
+    if (rfb) {
+      rfb.disconnect();
+      rfb = null;
+    }
+
+    rfb = new RFB(canvas, wsUrl, {
+      credentials: {},
+      reconnect: false,
+      resizeSession: true,
+      showDotCursor: true,
+      focusOnClick: true
+    });
+
+    rfb.addEventListener('connected', () => {
+      setStatus('connected', 'Connected');
+      document.getElementById('vmName').textContent += ' - Connected';
+    });
+
+    rfb.addEventListener('disconnected', () => {
+      setStatus('disconnected', 'Disconnected');
+      showCanvas(false);
+    });
+
+    rfb.addEventListener('credentialsrequired', () => {
+      // No credentials needed for our proxy
+    });
+
+  } catch(e) {
+    setStatus('disconnected', 'Connection failed');
+    document.getElementById('loadingIndicator').innerHTML = `
+      <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+      <div style="font-size: 16px; color: #EF4444; margin-bottom: 8px;">Connection Failed</div>
+      <div style="font-size: 13px; color: #888; margin-bottom: 20px;">${e.message}</div>
+      <button onclick="connect()" style="padding: 8px 16px; background: #6366F1; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Try Again</button>
+    `;
+    showCanvas(false);
+  }
+}
+
+// Reconnect
+window.reconnect = function() {
+  if (rfb) { rfb.disconnect(); rfb = null; }
+  showCanvas(false);
+  connect();
+};
+
+// Disconnect
+window.disconnect = function() {
+  if (rfb) { rfb.disconnect(); rfb = null; }
+  setStatus('disconnected', 'Disconnected');
+  showCanvas(false);
+};
+
+// Fullscreen
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+};
+
+// Load VM name
+async function loadVMName() {
+  try {
+    const res = await fetch(`/api/vms/${vmId}`);
+    if (res.ok) {
+      const vm = await res.json();
+      document.getElementById('vmName').textContent = vm.vm_name || `VM #${vmId}`;
+    } else {
+      document.getElementById('vmName').textContent = `VM #${vmId}`;
+    }
+  } catch(e) {
+    document.getElementById('vmName').textContent = `VM #${vmId}`;
+  }
+}
+
+// Initialize
+loadVMName();
+connect();
+</script>
+</body>
+</html>
