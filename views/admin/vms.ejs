@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title><%= title || 'Virtual Machines - HKVM Panel' %></title>
+  <link rel="icon" href="<%= siteLogo %>" type="image/png">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- ============ SVG ICON SPRITE ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/>
+      <line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/>
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+    </symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+    </symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+    </symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+      <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+      <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+      <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+      <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+    </symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
+    </symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+    </symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </symbol>
+    <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="admin-wrapper">
+  <%- include('../partials/admin/sidebar') %>
+
+  <div class="admin-main">
+    <%- include('../partials/admin/header') %>
+
+    <div class="admin-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title-section">
+          <h1 class="page-title">
+            <span class="title-icon"><svg width="22" height="22"><use href="#i-server"/></svg></span>
+            Virtual Machines
+          </h1>
+          <p class="page-subtitle">
+            Manage and monitor all virtual machines
+            <span class="live-indicator"><span class="live-dot"></span></span>
+            <span id="lastUpdate" style="opacity:0.7"></span>
+          </p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost btn-sm" onclick="loadVMs()" id="refreshBtn">
+            <svg width="13" height="13"><use href="#i-refresh"/></svg>
+            Refresh
+          </button>
+          <a href="/admin/vm-create" class="btn btn-primary btn-sm">
+            <svg width="13" height="13"><use href="#i-plus"/></svg>
+            New VM
+          </a>
+        </div>
+      </div>
+
+      <!-- VM Stats Row (clickable to filter) -->
+      <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px;">
+        <div class="stat-card stat-clickable" style="--card-gradient: var(--gradient-primary); padding: 14px; cursor:pointer;" data-filter="" onclick="quickFilter('')">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="stat-value" style="font-size: 22px;" id="totalCount">—</div>
+              <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-icon-svg" style="color: #6366F1;"><svg width="24" height="24"><use href="#i-server"/></svg></div>
+          </div>
+        </div>
+        <div class="stat-card stat-clickable" style="--card-gradient: var(--gradient-green); padding: 14px; cursor:pointer;" data-filter="running" onclick="quickFilter('running')">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="stat-value" style="font-size: 22px; color: var(--accent-green);" id="runningCount">—</div>
+              <div class="stat-label">Running</div>
+            </div>
+            <div class="stat-icon-svg" style="color: #10B981;"><svg width="24" height="24"><use href="#i-play"/></svg></div>
+          </div>
+        </div>
+        <div class="stat-card stat-clickable" style="--card-gradient: linear-gradient(135deg, #64748b, #475569); padding: 14px; cursor:pointer;" data-filter="stopped" onclick="quickFilter('stopped')">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="stat-value" style="font-size: 22px;" id="stoppedCount">—</div>
+              <div class="stat-label">Stopped</div>
+            </div>
+            <div class="stat-icon-svg" style="color: #9CA3AF;"><svg width="24" height="24"><use href="#i-power"/></svg></div>
+          </div>
+        </div>
+        <div class="stat-card" style="--card-gradient: var(--gradient-blue); padding: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="stat-value" style="font-size: 22px;" id="totalMemory">—</div>
+              <div class="stat-label">Total RAM</div>
+            </div>
+            <div class="stat-icon-svg" style="color: #10B981;"><svg width="24" height="24"><use href="#i-mem"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-input-wrapper" style="flex:1; max-width: 320px;">
+          <svg class="search-icon" width="14" height="14"><use href="#i-search"/></svg>
+          <input type="text" class="form-control" id="vmSearch" placeholder="Search by name, ID, OS, or IP..." oninput="filterVMs()" style="padding-left: 36px;">
+        </div>
+        <select class="form-control" id="statusFilter" onchange="filterVMs()" style="width: 150px;">
+          <option value="">All Status</option>
+          <option value="running">🟢 Running</option>
+          <option value="stopped">⚫ Stopped</option>
+          <option value="error">🔴 Error</option>
+        </select>
+        <div style="display: flex; gap: 6px; margin-left: auto;">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="setView('grid')" id="viewGrid" title="Grid view">
+            <svg width="14" height="14"><use href="#i-grid"/></svg>
+          </button>
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="setView('list')" id="viewList" title="List view">
+            <svg width="14" height="14"><use href="#i-list"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- VM Grid/List Container -->
+      <div id="vmContainer">
+        <div style="text-align: center; padding: 60px;">
+          <div class="spinner spinner-lg" style="margin: 0 auto 16px;"></div>
+          <div style="color: var(--text-muted); font-size: 14px;">Loading virtual machines...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+  </div>
+</div>
+
+<script>
+let allVMs = [];
+let currentView = 'list';
+
+function formatMem(mem) {
+  if (!mem) return '—';
+  return mem >= 1024 ? (mem/1024).toFixed(1) + ' GB' : mem + ' MB';
+}
+
+function formatTime() {
+  return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function getStatusClass(status) {
+  return status === 'running' ? 'badge-running' : status === 'error' ? 'badge-error' : 'badge-stopped';
+}
+
+// Set view mode
+function setView(view) {
+  currentView = view;
+  document.getElementById('viewGrid').classList.toggle('btn-primary', view === 'grid');
+  document.getElementById('viewGrid').classList.toggle('btn-ghost', view !== 'grid');
+  document.getElementById('viewList').classList.toggle('btn-primary', view === 'list');
+  document.getElementById('viewList').classList.toggle('btn-ghost', view !== 'list');
+  renderVMs();
+}
+
+// Quick filter from stat card
+function quickFilter(status) {
+  document.getElementById('statusFilter').value = status;
+  document.querySelectorAll('.stat-clickable').forEach(c => {
+    c.classList.toggle('is-active', c.dataset.filter === status);
+  });
+  renderVMs();
+}
+
+// Animate number counter
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  const duration = 600;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start)/duration, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = Math.round(current + (target-current) * eased);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Load VMs
+async function loadVMs() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) btn.classList.add('is-loading');
+  
+  try {
+    const res = await fetch('/api/admin/vms');
+    if (!res.ok) throw new Error('Failed to fetch VMs');
+    allVMs = await res.json();
+    
+    const total = allVMs.length;
+    const running = allVMs.filter(v => v.status === 'running').length;
+    const stopped = allVMs.filter(v => v.status === 'stopped').length;
+    const totalMem = allVMs.reduce((s,v) => s + (v.memory || 0), 0);
+
+    animateNumber('totalCount', total);
+    animateNumber('runningCount', running);
+    animateNumber('stoppedCount', stopped);
+    document.getElementById('totalMemory').textContent = formatMem(totalMem);
+    document.getElementById('lastUpdate').textContent = `· Updated ${formatTime()}`;
+
+    renderVMs();
+  } catch(e) {
+    document.getElementById('vmContainer').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon" style="color:#EF4444"><svg width="48" height="48"><use href="#i-alert"/></svg></div>
+        <div class="empty-state-title">Failed to load VMs</div>
+        <div class="empty-state-desc">${escHtml(e.message)}</div>
+        <button class="btn btn-primary" onclick="loadVMs()">
+          <svg width="13" height="13"><use href="#i-refresh"/></svg> Try Again
+        </button>
+      </div>`;
+    showToast('Failed to load VMs: ' + e.message, 'error');
+  } finally {
+    setTimeout(() => btn && btn.classList.remove('is-loading'), 500);
+  }
+}
+
+function filterVMs() { renderVMs(); }
+
+function getFilteredVMs() {
+  const q = document.getElementById('vmSearch')?.value.toLowerCase() || '';
+  const status = document.getElementById('statusFilter')?.value || '';
+  return allVMs.filter(vm => {
+    const matchQ = !q || 
+      vm.vm_name?.toLowerCase().includes(q) || 
+      String(vm.vm_id).includes(q) ||
+      vm.os_type?.toLowerCase().includes(q) ||
+      vm.template_name?.toLowerCase().includes(q) ||
+      vm.ipv4_address?.includes(q);
+    const matchStatus = !status || vm.status === status;
+    return matchQ && matchStatus;
+  });
+}
+
+function renderVMs() {
+  const filtered = getFilteredVMs();
+  const container = document.getElementById('vmContainer');
+  
+  if (allVMs.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon" style="color:#6366F1"><svg width="48" height="48"><use href="#i-server"/></svg></div>
+        <div class="empty-state-title">No Virtual Machines</div>
+        <div class="empty-state-desc">Create your first VM to get started with virtualization.</div>
+        <a href="/admin/vm-create" class="btn btn-primary">
+          <svg width="13" height="13"><use href="#i-plus"/></svg> Create First VM
+        </a>
+      </div>`;
+    return;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon" style="color:#6366F1"><svg width="48" height="48"><use href="#i-search"/></svg></div>
+        <div class="empty-state-title">No VMs Found</div>
+        <div class="empty-state-desc">No VMs match your search criteria. Try a different filter.</div>
+      </div>`;
+    return;
+  }
+
+  if (currentView === 'grid') renderGridView(filtered, container);
+  else renderListView(filtered, container);
+}
+
+function renderGridView(vms, container) {
+  container.innerHTML = `
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+      ${vms.map(vm => renderVMCard(vm)).join('')}
+    </div>`;
+}
+
+function renderVMCard(vm) {
+  const icon = vm.template_icon;
+  const displayIcon = (icon && icon.startsWith('http')) ? icon : 'https://i.imgur.com/wu0Ob6B.png';
+  const status = vm.status || 'stopped';
+  
+  return `
+    <div class="vm-card ${status}" onclick="window.location.href='/admin/vm/${vm.vm_id}'">
+      <div class="vm-header">
+        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+          <img src="${displayIcon}" alt="OS" style="width: 34px; height: 34px; object-fit: contain; border-radius: 8px; padding: 4px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15);" onerror="this.src='https://i.imgur.com/wu0Ob6B.png'">
+          <div style="min-width:0; flex:1;">
+            <div class="vm-name">${escHtml(vm.vm_name)}</div>
+            <div class="vm-os">${escHtml(vm.template_name || vm.os_type || 'Custom')} · #${vm.vm_id}</div>
+          </div>
+        </div>
+        <span class="badge ${getStatusClass(status)}" style="flex-shrink: 0;">
+          <span class="dot"></span>${status}
+        </span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; margin: 10px 0;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#10B981;display:inline-flex;"><svg width="14" height="14"><use href="#i-mem"/></svg></span>
+          <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;">RAM</div><strong style="color:var(--text-primary);">${vm.memory || '—'} MB</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#EC4899;display:inline-flex;"><svg width="14" height="14"><use href="#i-cpu"/></svg></span>
+          <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;">vCPUs</div><strong style="color:var(--text-primary);">${vm.cpus || '—'}</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#06B6D4;display:inline-flex;"><svg width="14" height="14"><use href="#i-disk"/></svg></span>
+          <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;">Disk</div><strong style="color:var(--text-primary);">${vm.disk_size || '—'}</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#3B82F6;display:inline-flex;"><svg width="14" height="14"><use href="#i-network"/></svg></span>
+          <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;">Network</div><strong style="color:var(--text-primary);">${vm.ipv4_address || vm.network_type || 'DHCP'}</strong></div>
+        </div>
+      </div>
+      <div class="vm-actions" onclick="event.stopPropagation()">
+        ${status === 'stopped' 
+          ? `<button class="btn btn-success btn-sm" onclick="vmAction('start', ${vm.vm_id}, '${escHtml(vm.vm_name)}')"><svg width="12" height="12"><use href="#i-play"/></svg> Start</button>`
+          : `<button class="btn btn-warning btn-sm" onclick="vmAction('stop', ${vm.vm_id}, '${escHtml(vm.vm_name)}')"><svg width="12" height="12"><use href="#i-stop"/></svg> Stop</button>`
+        }
+        <a href="/admin/vm/${vm.vm_id}/edit" class="btn btn-primary btn-sm"><svg width="12" height="12"><use href="#i-edit"/></svg> Edit</a>
+        <a href="/admin/vm/${vm.vm_id}" class="btn btn-outline btn-sm"><svg width="12" height="12"><use href="#i-info"/></svg> Details</a>
+        <a href="/admin/vm/${vm.vm_id}/console" class="btn btn-ghost btn-sm"><svg width="12" height="12"><use href="#i-terminal"/></svg> Console</a>
+      </div>
+    </div>
+  `;
+}
+
+function renderListView(vms, container) {
+  container.innerHTML = `
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>VM</th>
+              <th>Status</th>
+              <th>Resources</th>
+              <th>Disk</th>
+              <th>Network</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${vms.map(vm => {
+              const icon = vm.template_icon;
+              const displayIcon = (icon && icon.startsWith('http')) ? icon : 'https://i.imgur.com/wu0Ob6B.png';
+              const status = vm.status || 'stopped';
+              return `
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="${displayIcon}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px; padding: 4px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15);" onerror="this.src='https://i.imgur.com/wu0Ob6B.png'">
+                    <div>
+                      <a href="/admin/vm/${vm.vm_id}" class="strong" style="text-decoration: none; color: var(--text-primary); font-weight:600;">${escHtml(vm.vm_name)}</a>
+                      <div style="font-size: 11px; color: var(--text-muted); margin-top:2px;">
+                        <span style="background:rgba(99,102,241,0.1);color:#6366F1;padding:1px 7px;border-radius:5px;font-family:monospace;font-weight:600;">#${vm.vm_id}</span>
+                        <span style="margin-left:6px;">${escHtml(vm.template_name || vm.os_type || 'Custom')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge ${getStatusClass(status)}">
+                    <span class="dot"></span>${status}
+                  </span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 12px; font-size: 12px;">
+                    <div style="display: flex; align-items: center; gap: 5px;" title="vCPUs">
+                      <span style="color:#EC4899;display:inline-flex;"><svg width="12" height="12"><use href="#i-cpu"/></svg></span>
+                      <strong style="color: var(--text-primary);">${vm.cpus || '—'}</strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;" title="Memory">
+                      <span style="color:#10B981;display:inline-flex;"><svg width="12" height="12"><use href="#i-mem"/></svg></span>
+                      <strong style="color: var(--text-primary);">${formatMem(vm.memory)}</strong>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                    <span style="color:#06B6D4;display:inline-flex;"><svg width="12" height="12"><use href="#i-disk"/></svg></span>
+                    <strong style="color: var(--text-primary);">${vm.disk_size || '—'}</strong>
+                  </div>
+                </td>
+                <td style="font-size: 12px;">
+                  <div style="color:var(--text-primary);font-weight:500;">${vm.ipv4_address || (vm.network_type === 'dhcp' ? 'DHCP' : '—')}</div>
+                  <div style="color: var(--text-muted); font-family:monospace; font-size:10px; margin-top:2px;">SSH: ${vm.ssh_port || vm.ssh_port_static || '22'}</div>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 6px; align-items: center; justify-content:flex-end; flex-wrap: wrap;">
+                    ${status === 'stopped'
+                      ? `<button class="btn btn-success btn-sm btn-icon" onclick="vmAction('start', ${vm.vm_id}, '${escHtml(vm.vm_name)}')" title="Start"><svg width="13" height="13"><use href="#i-play"/></svg></button>`
+                      : `<button class="btn btn-warning btn-sm btn-icon" onclick="vmAction('stop', ${vm.vm_id}, '${escHtml(vm.vm_name)}')" title="Stop"><svg width="13" height="13"><use href="#i-stop"/></svg></button>`
+                    }
+                    <button class="btn btn-ghost btn-sm btn-icon" onclick="vmAction('restart', ${vm.vm_id}, '${escHtml(vm.vm_name)}')" title="Restart"><svg width="13" height="13"><use href="#i-restart"/></svg></button>
+                    <a href="/admin/vm/${vm.vm_id}/edit" class="btn btn-primary btn-sm btn-icon" title="Edit"><svg width="13" height="13"><use href="#i-edit"/></svg></a>
+                    <a href="/admin/vm/${vm.vm_id}" class="btn btn-outline btn-sm btn-icon" title="Details"><svg width="13" height="13"><use href="#i-info"/></svg></a>
+                    <a href="/admin/vm/${vm.vm_id}/console" class="btn btn-ghost btn-sm btn-icon" title="Console"><svg width="13" height="13"><use href="#i-terminal"/></svg></a>
+                    <button class="btn btn-danger btn-sm btn-icon" onclick="confirmDelete(${vm.vm_id}, '${escHtml(vm.vm_name)}')" title="Delete"><svg width="13" height="13"><use href="#i-trash"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+            `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// VM Actions
+async function vmAction(action, vmId, vmName) {
+  const msgs = {
+    start: `Start VM "${vmName}"?`,
+    stop: `Stop VM "${vmName}"? Running processes will be interrupted.`,
+    restart: `Restart VM "${vmName}"? The VM will be rebooted.`
+  };
+  const confirmed = await confirmAction(
+    msgs[action] || `${action} "${vmName}"?`,
+    action.charAt(0).toUpperCase() + action.slice(1) + ' Virtual Machine'
+  );
+  if (!confirmed) return;
+  
+  try {
+    showToast(`${action.charAt(0).toUpperCase() + action.slice(1)}ing VM...`, 'info');
+    const res = await fetch(`/api/vms/${vmId}/${action}`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`VM ${action}ed successfully`, 'success');
+      setTimeout(loadVMs, 1000);
+    } else {
+      showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+    }
+  } catch(e) {
+    showToast('Action failed: ' + e.message, 'error');
+  }
+}
+
+async function confirmDelete(vmId, vmName) {
+  const confirmed = await confirmAction(
+    `This will permanently delete VM "${vmName}" (ID: ${vmId}) and all its files. This action cannot be undone!`,
+    'Delete Virtual Machine',
+    'danger'
+  );
+  if (!confirmed) return;
+  
+  try {
+    showToast('Deleting VM...', 'warning');
+    const res = await fetch(`/api/vms/${vmId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('VM deleted successfully', 'success');
+      loadVMs();
+    } else {
+      showToast('Delete failed: ' + (data.error || 'Unknown error'), 'error');
+    }
+  } catch(e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// Toast system with SVG icons
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer') || createToastContainer();
+  const iconMap = { success: 'i-check', error: 'i-x', warning: 'i-alert', info: 'i-info' };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon"><svg width="18" height="18"><use href="#${iconMap[type] || 'i-info'}"/></svg></span>
+    <span class="toast-message">${escHtml(msg)}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()" aria-label="Close">×</button>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  }, 4500);
+}
+
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.id = 'toastContainer';
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+  return container;
+}
+
+// Confirmation dialog with SVG icons
+function confirmAction(msg, title, variant = 'warning') {
+  return new Promise((resolve) => {
+    const isDanger = variant === 'danger';
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-lg);width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:slideInModal 0.35s ease-out;overflow:hidden;';
+    
+    const iconColor = isDanger ? '#EF4444' : '#F59E0B';
+    const iconBg = isDanger ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)';
+    const btnGrad = isDanger ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'linear-gradient(135deg,#f59e0b,#f97316)';
+    const btnShadow = isDanger ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)';
+    
+    modal.innerHTML = `
+      <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;background:${iconBg};border-radius:10px;display:flex;align-items:center;justify-content:center;color:${iconColor};">
+          <svg width="22" height="22"><use href="#i-alert"/></svg>
+        </div>
+        <h2 style="margin:0;color:var(--text-primary);font-size:16px;font-weight:700;">${escHtml(title)}</h2>
+      </div>
+      <div style="padding:20px 22px;">
+        <p style="margin:0;color:var(--text-secondary);font-size:14px;line-height:1.5;">${escHtml(msg)}</p>
+      </div>
+      <div style="padding:14px 22px 18px;border-top:1px solid var(--border-subtle);display:flex;gap:10px;justify-content:flex-end;">
+        <button id="cancelBtn" style="padding:9px 18px;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-size:13px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);">Cancel</button>
+        <button id="confirmBtn" style="padding:9px 18px;border-radius:var(--radius-sm);cursor:pointer;border:none;font-weight:600;font-size:13px;background:${btnGrad};color:white;box-shadow:0 4px 12px ${btnShadow};">Confirm</button>
+      </div>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    const cleanup = () => overlay.remove();
+    modal.querySelector('#confirmBtn').onclick = () => { cleanup(); resolve(true); };
+    modal.querySelector('#cancelBtn').onclick = () => { cleanup(); resolve(false); };
+    overlay.onclick = (e) => { if (e.target === overlay) { cleanup(); resolve(false); } };
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { cleanup(); resolve(false); document.removeEventListener('keydown', esc); }
+    });
+  });
+}
+
+// Init
+setView('list');
+loadVMs();
+setInterval(loadVMs, 30000);
+</script>
+</body>
+</html>
