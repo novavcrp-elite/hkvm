@@ -139,17 +139,17 @@
                 <input type="hidden" name="cpu_cores" value="2" id="cpuInput">
               </div>
               <div class="form-group">
-                <label class="form-label">Memory</label>
+                <label class="form-label">Memory (GB)</label>
                 <div class="resource-slider">
-                  <input type="range" min="128" max="16384" step="128" value="2048" id="memSlider" oninput="updateSlider('mem')">
+                  <input type="range" min="0.25" max="64" step="0.25" value="2" id="memSlider" oninput="updateSlider('mem')">
                   <div class="resource-value" id="memValue">2 GB</div>
                 </div>
                 <input type="hidden" name="memory" value="2048" id="memInput">
               </div>
               <div class="form-group">
-                <label class="form-label">Swap</label>
+                <label class="form-label">Swap (GB)</label>
                 <div class="resource-slider">
-                  <input type="range" min="0" max="16384" step="128" value="2048" id="swapSlider" oninput="updateSlider('swap')">
+                  <input type="range" min="0" max="64" step="0.25" value="2" id="swapSlider" oninput="updateSlider('swap')">
                   <div class="resource-value" id="swapValue">2 GB</div>
                 </div>
                 <input type="hidden" name="swap" value="2048" id="swapInput">
@@ -301,12 +301,13 @@ function updateSlider(type) {
   const slider = document.getElementById(type + 'Slider');
   const input = document.getElementById(type + 'Input');
   const value = document.getElementById(type + 'Value');
-  const val = parseInt(slider.value);
-  input.value = val;
+  const gb = parseFloat(slider.value);
+  const mb = Math.round(gb * 1024);
+  input.value = mb;
   if (type === 'cpu') {
-    value.textContent = val + ' core' + (val > 1 ? 's' : '');
+    value.textContent = gb + ' core' + (gb > 1 ? 's' : '');
   } else {
-    value.textContent = val >= 1024 ? (val / 1024).toFixed(1).replace('.0', '') + ' GB' : val + ' MB';
+    value.textContent = gb + ' GB';
   }
 }
 

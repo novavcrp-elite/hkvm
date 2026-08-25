@@ -160,9 +160,10 @@ async function createContainer(config) {
   const imageAlias = image.replace('images:', '');
   let initCmd = `init ${image} ${name}`;
   
-  // Resource limits
+  // Resource limits (use GiB for memory as LXD expects)
   initCmd += ` -c limits.cpu=${cpu_cores}`;
-  initCmd += ` -c limits.memory=${memMB}MB`;
+  const memGB = Math.max(0.0625, memMB / 1024);
+  initCmd += ` -c limits.memory=${memGB}GiB`;
   
   // Security features
   const nestingEnabled = nesting || enable_docker || enable_kvm || enable_fuse;
@@ -171,16 +172,8 @@ async function createContainer(config) {
     initCmd += ` -c security.privileged=true`;
   }
   
-  // Root disk
-  initCmd += ` root --type disk size=${diskGB}GB path=/`;
-  
-  // Network
-  if (network_type === 'static' && ipv4_address) {
-    const cidr = netmask.includes('.') ? netmaskToCIDR(netmask) : netmask;
-    initCmd += ` eth0 --type nic nictype=bridged parent=${bridge} ipv4.address=${ipv4_address}/${cidr}`;
-  } else {
-    initCmd += ` eth0 --type nic nictype=bridged parent=${bridge}`;
-  }
+  // Storage - use default storage pool with root disk size
+  initCmd += ` -s default -d root,size=${diskGB}GB`;
   
   console.log(`[LocalLXD] Creating container: ${initCmd}`);
   
