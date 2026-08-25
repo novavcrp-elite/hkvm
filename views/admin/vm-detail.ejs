@@ -270,6 +270,8 @@ function renderPage(vm, stats) {
         }
         <a href="/admin/vm/${vmId}/console" class="btn btn-outline btn-sm">${svg('i-terminal', 13)} Console</a>
         <a href="/admin/vm/${vmId}/ssh" class="btn btn-outline btn-sm" title="SSH Terminal">${svg('i-ssh', 13)} SSH</a>
+        <a href="/vm/${vmId}/tmate" class="btn btn-outline btn-sm" title="tmate SSH Access" style="color: #8B5CF6; border-color: rgba(139,92,246,0.3);">${svg('i-link', 13)} tmate SSH</a>
+        <a href="/vm/${vmId}/novnc" class="btn btn-outline btn-sm" title="NoVNC Web Console" style="color: #06B6D4; border-color: rgba(6,182,212,0.3);">${svg('i-camera', 13)} Web Console</a>
         <a href="/admin/vm/${vmId}/edit" class="btn btn-ghost btn-sm">${svg('i-edit', 13)} Edit</a>
       </div>
     </div>

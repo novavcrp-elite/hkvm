@@ -385,7 +385,8 @@ function renderVMCard(vm) {
         }
         <a href="/admin/vm/${vm.vm_id}/edit" class="btn btn-primary btn-sm"><svg width="12" height="12"><use href="#i-edit"/></svg> Edit</a>
         <a href="/admin/vm/${vm.vm_id}" class="btn btn-outline btn-sm"><svg width="12" height="12"><use href="#i-info"/></svg> Details</a>
-        <a href="/admin/vm/${vm.vm_id}/console" class="btn btn-ghost btn-sm"><svg width="12" height="12"><use href="#i-terminal"/></svg> Console</a>
+        <a href="/vm/${vm.vm_id}/tmate" class="btn btn-ghost btn-sm" style="color: #8B5CF6;"><svg width="12" height="12"><use href="#i-link"/></svg> tmate</a>
+        <a href="/vm/${vm.vm_id}/novnc" class="btn btn-ghost btn-sm" style="color: #06B6D4;"><svg width="12" height="12"><use href="#i-camera"/></svg> noVNC</a>
       </div>
     </div>
   `;
