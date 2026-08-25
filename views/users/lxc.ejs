@@ -191,10 +191,6 @@
           </p>
         </div>
         <div style="position: relative; z-index: 1; display: flex; gap: 10px;">
-          <a href="/lxc/create" class="btn-refresh" style="text-decoration:none; background: var(--color-indigo); color: #fff; border-color: var(--color-indigo);">
-            <svg class="icon"><use href="#i-plus"/></svg>
-            Create Container
-          </a>
           <button class="btn-refresh" onclick="syncFromServer()" style="border-color: rgba(245,158,11,0.3); color: #F59E0B;">
             <svg class="icon"><use href="#i-refresh"/></svg>
             Sync from Server
@@ -388,9 +384,6 @@ function renderLXC() {
         <div class="empty-icon-wrap"><svg class="icon"><use href="#i-server"/></svg></div>
         <div class="empty-title">No LXC Containers</div>
         <div class="empty-desc">You don't have any containers assigned yet. Contact your administrator to request containers.</div>
-        <a href="/lxc/create" class="btn-refresh" style="text-decoration:none; background: var(--color-indigo); color: #fff; border-color: var(--color-indigo);">
-          <svg class="icon"><use href="#i-plus"/></svg> Create Container
-        </a>
       </div>`;
     return;
   }

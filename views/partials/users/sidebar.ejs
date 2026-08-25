@@ -52,14 +52,10 @@
                 <span class="nav-text">LXC Containers</span>
                 <svg class="nav-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="nav-submenu <%= currentPage === 'lxc' || currentPage === 'lxc-detail' || currentPage === 'lxc-create' ? 'open' : '' %>">
+            <div class="nav-submenu <%= currentPage === 'lxc' || currentPage === 'lxc-detail' ? 'open' : '' %>">
                 <a href="/lxc" class="nav-subitem <%= currentPage === 'lxc' || currentPage === 'lxc-detail' ? 'active' : '' %>">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     All Containers
-                </a>
-                <a href="/lxc/create" class="nav-subitem <%= currentPage === 'lxc-create' ? 'active' : '' %>">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    Create Container
                 </a>
             </div>
             

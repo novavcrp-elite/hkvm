@@ -5091,8 +5091,8 @@ app.get('/api/lxc/:id', checkAuth, (req, res) => {
   }).catch(err => res.status(500).json({ error: err.message }));
 });
 
-// Create LXC container
-app.post('/api/lxc', checkAuth, (req, res) => {
+// Create LXC container (admin only)
+app.post('/api/lxc', checkAuth, checkAdmin, (req, res) => {
   lxcModule.createContainer(req.body, req.session.userId, req.ip).then(result => {
     res.json({ success: true, ...result });
   }).catch(err => res.status(500).json({ error: err.message }));
@@ -5281,7 +5281,7 @@ app.get('/lxc', checkAuth, (req, res) => {
   });
 });
 
-app.get('/lxc/create', checkAuth, (req, res) => {
+app.get('/lxc/create', checkAuth, checkAdmin, (req, res) => {
   res.render('users/lxc-create', {
     title: 'Create LXC Container - HKVM Panel',
     currentPage: 'lxc-create',
