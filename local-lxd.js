@@ -106,7 +106,24 @@ async function ensureImagesRemote() {
 }
 
 /**
- * Create a container using LXD API
+ * Execute lxc CLI command
+ */
+function execLxc(args, timeout = 120000) {
+  const { execSync } = require('child_process');
+  const cmd = `/snap/bin/lxc ${args}`;
+  console.log(`[LocalLXD] Executing: ${cmd}`);
+  try {
+    const stdout = execSync(cmd, { encoding: 'utf8', timeout, shell: '/bin/bash' });
+    return stdout.trim();
+  } catch (err) {
+    const stderr = err.stderr || '';
+    const stdout = err.stdout || '';
+    throw new Error(`lxc command failed: ${stderr || stdout || err.message}`);
+  }
+}
+
+/**
+ * Create a container using lxc CLI (more reliable than API)
  */
 async function createContainer(config) {
   const {
@@ -133,68 +150,80 @@ async function createContainer(config) {
 
   if (!name) throw new Error('Container name is required');
 
-  // Ensure images: remote exists
-  await ensureImagesRemote();
-
   const memMB = parseInt(String(memory).replace(/[^0-9]/g, '')) || 2048;
   const diskGB = parseInt(String(disk_size).replace(/[^0-9]/g, '')) || 20;
 
-  // Build LXD instance create request
-  const instanceConfig = {
-    name: name,
-    source: {
-      type: 'image',
-      alias: image.replace('images:', '')
-    },
-    devices: {
-      root: {
-        type: 'disk',
-        path: '/',
-        pool: 'default',
-        size: `${diskGB}GB`
-      }
-    },
-    config: {
-      'limits.cpu': String(cpu_cores),
-      'limits.memory': `${memMB}MB`,
-      'security.nesting': (nesting || enable_docker || enable_kvm || enable_fuse) ? 'true' : 'false',
-      'security.privileged': (enable_kvm && !unprivileged) ? 'true' : 'false'
-    },
-    profiles: ['default']
-  };
+  // Ensure images: remote exists
+  await ensureImagesRemote();
 
-  // Network config
+  // Build lxc init command
+  const imageAlias = image.replace('images:', '');
+  let initCmd = `init ${image} ${name}`;
+  
+  // Resource limits
+  initCmd += ` -c limits.cpu=${cpu_cores}`;
+  initCmd += ` -c limits.memory=${memMB}MB`;
+  
+  // Security features
+  const nestingEnabled = nesting || enable_docker || enable_kvm || enable_fuse;
+  initCmd += ` -c security.nesting=${nestingEnabled ? 'true' : 'false'}`;
+  if (enable_kvm && !unprivileged) {
+    initCmd += ` -c security.privileged=true`;
+  }
+  
+  // Root disk
+  initCmd += ` root --type disk size=${diskGB}GB path=/`;
+  
+  // Network
   if (network_type === 'static' && ipv4_address) {
     const cidr = netmask.includes('.') ? netmaskToCIDR(netmask) : netmask;
-    instanceConfig.devices.eth0 = {
-      type: 'nic',
-      nictype: 'bridged',
-      parent: bridge,
-      'ipv4.address': `${ipv4_address}/${cidr}`
-    };
+    initCmd += ` eth0 --type nic nictype=bridged parent=${bridge} ipv4.address=${ipv4_address}/${cidr}`;
+  } else {
+    initCmd += ` eth0 --type nic nictype=bridged parent=${bridge}`;
   }
-
-  // Cloud-init: set password
-  instanceConfig.config['user.user-data'] = `#cloud-config\nchpasswd:\n  expire: false\n  list:\n    - root:${password}\npassword: ${password}\nssh_pwauth: true\nmanage_etc_hosts: true\n`;
-
-  // Create the instance
-  const result = await lxdApiRequest('POST', '/1.0/instances', instanceConfig, 120000);
-  if (result.type === 'error') {
-    throw new Error(`Failed to create container: ${result.error || 'Unknown error'}`);
+  
+  console.log(`[LocalLXD] Creating container: ${initCmd}`);
+  
+  try {
+    execLxc(initCmd, 120000);
+    console.log(`[LocalLXD] Container ${name} created successfully`);
+  } catch (err) {
+    throw new Error(`Failed to create container '${name}': ${err.message}`);
   }
-
-  // Wait for creation to complete (operation)
-  if (result.operation) {
-    await waitForOperation(result.operation);
+  
+  // Set root password via cloud-init
+  try {
+    const cloudInit = `#cloud-config\nchpasswd:\n  expire: false\n  list:\n    - root:${password}\npassword: ${password}\nssh_pwauth: true\nmanage_etc_hosts: true\n`;
+    execLxc(`config set ${name} user.user-data '${cloudInit}'`, 10000);
+  } catch (e) {
+    console.warn(`[LocalLXD] Failed to set cloud-init: ${e.message}`);
   }
-
+  
+  // Set description
+  if (description) {
+    try {
+      execLxc(`config set ${name} description '${description}'`, 5000);
+    } catch (e) {}
+  }
+  
   // Start the container
   try {
-    await lxdApiRequest('PUT', `/1.0/instances/${name}/state`, { action: 'start' }, 30000);
+    execLxc(`start ${name}`, 30000);
+    console.log(`[LocalLXD] Container ${name} started`);
   } catch (e) {
     console.warn(`[LocalLXD] Container created but failed to start: ${e.message}`);
   }
-
+  
+  // Verify container exists
+  try {
+    const listOutput = execLxc(`list ${name} --format csv`, 10000);
+    if (!listOutput.includes(name)) {
+      throw new Error('Container not found after creation');
+    }
+  } catch (e) {
+    throw new Error(`Container creation verification failed: ${e.message}`);
+  }
+  
   // Get container info
   const info = await getContainerInfo(name);
 
