@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" href="<%= siteLogo %>" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        /* Enhanced Styles */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: var(--text-primary);
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+
+        /* Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 18px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition-fast);
+            text-transform: capitalize;
+        }
+
+        .tab-btn:hover { color: var(--text-primary); }
+        .tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); }
+
+        /* Templates Grid */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .template-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .template-card:hover {
+            border-color: var(--border-color-hover);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .template-icon { font-size: 36px; margin-bottom: 12px; }
+
+        .template-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .template-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .template-meta-badge {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .template-meta-badge.custom { background: rgba(139, 92, 246, 0.1); }
+        .template-meta-badge.builtin { background: rgba(16, 185, 129, 0.1); }
+
+        .card-body { padding: 20px; }
+
+        .template-description {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            min-height: 40px;
+        }
+
+        .template-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px 0;
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 16px;
+        }
+
+        .spec { display: flex; flex-direction: column; gap: 4px; }
+        .spec-label { font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
+        .spec-value { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .status-cached { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
+        .status-download { background: rgba(245, 158, 11, 0.1); color: var(--accent-orange); }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-actions .btn { flex: 1; min-width: 80px; }
+
+        .card-footer {
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-subtle);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Cache Info Card */
+        .cache-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .cache-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+
+        .cache-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .cache-stat { display: flex; flex-direction: column; gap: 4px; }
+        .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .stat-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .stat-path { font-size: 11px; color: var(--text-muted); font-family: monospace; word-break: break-all; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+        .empty-desc { font-size: 13px; color: var(--text-muted); }
+
+        /* Loading */
+        .loading { text-align: center; padding: 48px 24px; }
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .page-header { flex-direction: column; align-items: flex-start; }
+            .header-actions { width: 100%; }
+            .header-actions .btn { width: 100%; }
+            .templates-grid { grid-template-columns: 1fr; }
+            .card-actions .btn { flex: 1; }
+            .template-specs { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/sidebar') %>
+    
+    <div class="admin-main">
+        <%- include('../partials/admin/header') %>
+        
+        <main class="admin-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-title">
+                    <h1><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 8px; vertical-align: middle;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path><polyline points="3.27 6.96 12 12.5 20.73 6.96"></polyline><line x1="12" y1="22.5" x2="12" y2="12"></line></svg>OS Templates</h1>
+                    <p>Manage and customize operating system templates</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/admin/templates/add" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Template
+                    </a>
+                    <button class="btn btn-outline" onclick="refreshPage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6"></path>
+                            <path d="M1 20v-6h6"></path>
+                            <path d="M3.51 9a9 9 0 0114.85-3.36M20.49 15a9 9 0 01-14.85 3.36"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cache Info -->
+            <div class="cache-card">
+                <div class="cache-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 8px; vertical-align: middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><rect x="2" y="4" width="20" height="3"></rect></svg>Template Cache</div>
+                <div class="cache-stats">
+                    <div class="cache-stat">
+                        <div class="stat-label">Cached Templates</div>
+                        <div class="stat-value" id="cacheCount">0</div>
+                    </div>
+                    <div class="cache-stat">
+                        <div class="stat-label">Cache Size</div>
+                        <div class="stat-value" id="cacheSize">0 GB</div>
+                    </div>
+                    <div class="cache-stat">
+                        <div class="stat-label">Location</div>
+                        <div class="stat-path" id="cachePath">Loading...</div>
+                    </div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="confirmClearCache()">Clear Cache</button>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="tab-btn active" onclick="switchTab('all', this)">All Templates</button>
+                <button class="tab-btn" onclick="switchTab('builtin', this)">Built-in</button>
+                <button class="tab-btn" onclick="switchTab('custom', this)">Custom</button>
+            </div>
+
+            <!-- Templates Grid -->
+            <div id="templatesContainer" class="templates-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading templates...</p>
+                </div>
+            </div>
+        </main>
+
+        <%- include('../partials/admin/footer') %>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <script>
+        let currentTab = 'all';
+        let allTemplates = [];
+
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/api/admin/templates');
+                if (!response.ok) throw new Error('Failed to load templates');
+                allTemplates = await response.json();
+                renderTemplates();
+                loadCacheInfo();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('templatesContainer').innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                        <div class="empty-title">Error Loading Templates</div>
+                        <div class="empty-desc">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderTemplates() {
+            let templates = allTemplates;
+            if (currentTab === 'builtin') templates = templates.filter(t => !t.is_custom);
+            if (currentTab === 'custom') templates = templates.filter(t => t.is_custom);
+
+            if (!templates.length) {
+                document.getElementById('templatesContainer').innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path></svg></div>
+                        <div class="empty-title">No templates found</div>
+                        <div class="empty-desc">No templates in this category</div>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('templatesContainer').innerHTML = templates.map(t => `
+                <div class="template-card">
+                    <div class="card-header">
+                        <div class="template-icon">
+                            ${t.icon && (t.icon.startsWith('http://') || t.icon.startsWith('https://')) 
+                                ? `<img src="${t.icon}" alt="Template icon" style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px;" onerror="this.src='📦'; this.style.fontSize='36px'; this.style.width='auto'; this.style.height='auto';">` 
+                                : (t.icon || '📦')}
+                        </div>
+                        <div class="template-title">${t.template_name || 'Unknown'}</div>
+                        <div class="template-meta">
+                            <span>${t.template_type || 'cloud-init'}</span>
+                            <span class="template-meta-badge ${t.is_custom ? 'custom' : 'builtin'}">
+                                ${t.is_custom ? 'Custom' : 'Built-in'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="template-description">${t.description || 'No description'}</div>
+                        
+                        <div class="template-specs">
+                            <div class="spec">
+                                <div class="spec-label">Memory</div>
+                                <div class="spec-value">${t.memory || 0}MB</div>
+                            </div>
+                            <div class="spec">
+                                <div class="spec-label">vCPUs</div>
+                                <div class="spec-value">${t.cpus || 0}</div>
+                            </div>
+                            <div class="spec">
+                                <div class="spec-label">Disk</div>
+                                <div class="spec-value">${t.disk_size || 'N/A'}</div>
+                            </div>
+                            <div class="spec">
+                                <div class="spec-label">User</div>
+                                <div class="spec-value">${t.username || 'N/A'}</div>
+                            </div>
+                        </div>
+
+                        ${t.local_path ? `
+                            <div class="status-badge status-cached">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Cached Locally
+                            </div>
+                        ` : t.download_url ? `
+                            <div class="status-badge status-download">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Available to Download
+                            </div>
+                        ` : ''}
+
+                        <div class="card-actions">
+                            ${!t.local_path && t.download_url ? `
+                                <button class="btn btn-outline btn-sm" onclick="downloadTemplate('${t.template_key}')">Download</button>
+                            ` : ''}
+                            <button class="btn btn-secondary btn-sm" onclick="editTemplate(${t.template_id || 0}, '${t.template_key}')">Edit</button>
+                            ${t.is_custom ? `
+                                <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.template_id || 0})">Delete</button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        ${t.created_at ? `Created: ${new Date(t.created_at).toLocaleDateString()}` : 'Built-in Template'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTemplates();
+        }
+
+        async function downloadTemplate(key) {
+            if (!confirm('Download this template to cache locally?')) return;
+            try {
+                const res = await fetch(`/api/admin/templates/${key}/download`, { method: 'POST' });
+                if (!res.ok) throw new Error('Download failed');
+                alert('Template downloaded successfully!');
+                loadTemplates();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function deleteTemplate(id) {
+            if (!confirm('Delete this template? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`/api/admin/templates/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Delete failed');
+                alert('Template deleted successfully!');
+                loadTemplates();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function editTemplate(id, key) {
+            // For built-in templates without ID, use the key
+            if (id === 0 && key) {
+                window.location.href = `/admin/templates/builtin/${key}/edit`;
+            } else {
+                window.location.href = `/admin/templates/${id}/edit`;
+            }
+        }
+
+        async function loadCacheInfo() {
+            try {
+                const res = await fetch('/api/admin/templates/cache/info');
+                if (!res.ok) throw new Error('Failed to load cache info');
+                const data = await res.json();
+                document.getElementById('cacheCount').textContent = data.total_count || 0;
+                document.getElementById('cacheSize').textContent = (data.total_size_readable || '0 GB');
+                document.getElementById('cachePath').textContent = data.cache_directory || 'N/A';
+            } catch (e) {
+                console.error('Error loading cache info:', e);
+            }
+        }
+
+        async function confirmClearCache() {
+            if (!confirm('Clear all cached templates? This cannot be undone and may take time.')) return;
+            try {
+                const res = await fetch('/api/admin/templates/cache/clear', { method: 'POST' });
+                if (!res.ok) throw new Error('Clear failed');
+                const data = await res.json();
+                alert(data.message || 'Cache cleared successfully!');
+                loadTemplates();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function refreshPage() {
+            loadTemplates();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadTemplates);
+    </script>
+</body>
+</html>
